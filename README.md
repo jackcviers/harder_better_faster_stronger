@@ -11,24 +11,24 @@ Any notes on giving this presentation will be stored under notes/.
 The presentation is broken into four parts:
 
 harder
-+++++++
+------
 
 Describes motivation for mvc. Overviews what happens with spaghetti code for an application. Shows starting point and goal.
 
 better
-++++++
+-------
 
 Describes mvc pattern as implemented by Backbone.js Introduces the four main components of Backbone - *Model*, *View*, *Controller*, *Router*.
 
 faster
-++++++
+-------
 
 Describes using a model and a view to load a file and show the progress loading the file, storing it into a choice of server or local storage.
 Shows retrieving same file in a collection and visualizing various files in the storage in a view. Essentially crud and DAO 
 patterns.
 
 stronger
-++++++
+---------
 
 Shows how to use models and views to display data via apis other than ajax -- mainly, music data streamed through the audio api.
 Describes how the previous music list view can be used in combination with an audio player to load and play a file. Shows how a router
