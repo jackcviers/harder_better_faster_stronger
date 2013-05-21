@@ -38,3 +38,14 @@ and canvas based views -- finishing up with a view that processes audio data and
 To avoid copyright infringement, I am providing my own legally obtained music files for this presentation, and if you use the
 same presentation you should provide your own. I suggest Daft Punk, but Kanye West is applicable too. I'm hardcoding the app to crash
 when Brittany Spears is played. There is some accounting for taste.
+
+Acknowledgments
+-----
+The basic raw visualization code is inspired by [this](http://jsfiddle.net/gaJyT/18/) jsfiddle.
+
+
+Licenses
+--------
+The code is licensed under the [MIT LICENSE](http://opensource.org/licenses/MIT)
+
+The text and presentation content is licensed under the <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Text" property="dct:title" rel="dct:type">harder_better_faster_stronger</span> by <span xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">Jack Viers</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/deed.en_US">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.
