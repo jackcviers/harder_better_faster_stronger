@@ -1,0 +1,39 @@
+{
+  "name": "harder_better_faster_stronger",
+  "description": "Visualizing music with backbone js.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/jackcviers/harder_better_faster_stronger",
+  "author": {
+    "name": "Jack Viers",
+    "email": "jackcviers@gmail.com",
+    "url": "http://github.com/jackcviers"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/jackcviers/harder_better_faster_stronger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jackcviers/harder_better_faster_stronger/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/jackcviers/harder_better_faster_stronger/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "Gruntfile.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "devDependencies": {
+    "grunt-contrib-qunit": "0.1.1rc6",
+    "grunt": "0.4.0rc7"
+  },
+  "keywords": [
+    "backbone",
+    "plugin"
+  ]
+}
