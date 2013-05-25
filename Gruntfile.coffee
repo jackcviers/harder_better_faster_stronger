@@ -26,8 +26,8 @@ module.exports = (grunt) ->
     clean: [
       'test/css/**'
       'test/*.js'
-      'test/img/**'
-      'img/**'
+      'test/images/**'
+      'images/**'
       'css/**'
       'fonts/**'
       'test/fonts/**'
@@ -118,14 +118,18 @@ module.exports = (grunt) ->
           {
             src:
               [
-                'src/main/resources/images/**'
+                '**'
               ]
             dest: 'images/'
+            cwd: 'src/main/resources/images'
+            expand: true
           }
           {
             src:
-              ['src/main/resources/fonts/**']
+              ['**']
             dest: 'fonts/'
+            cwd: 'src/main/resources/fonts'
+            expand: true            
           }
         ]
       test:
@@ -133,14 +137,20 @@ module.exports = (grunt) ->
           {
             src:
               [
-                'src/main/resources/images/**'
+                '**'
               ]
-            dest: 'test/images/'
+            dest: 'test/images'
+            expand: true
+            cwd:'src/main/resources/images'
           }
           {
             src:
-              ['src/main/resources/fonts/**']
-            dest: 'test/fonts/'
+              [
+                '**'
+              ]
+            dest: 'test/fonts'
+            expand: true
+            cwd:'src/main/resources/fonts'
           }
         ]
     jshint:
