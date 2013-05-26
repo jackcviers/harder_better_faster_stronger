@@ -14,11 +14,12 @@
     <!-- mocha -->
     <script src="js/mocha.js" type="text/javascript" charset="utf-8"></script>
     <!-- specs -->
-    <script src="./harder_better_faster_stronger-specs.js">
+
     <script type="text/javascript" charset="utf-8">
         // This will be overridden by mocha-helper if you run with grunt
         mocha.setup('bdd');
     </script>
+    <script src="./harder_better_faster_stronger-specs.js" type="text/javascript">
 
     <!--
          IMPORTANT
@@ -26,13 +27,13 @@
          and are not using AMD, you must include the bridge.js file
          in the `phantomjs` folder after you include `mocha.js`
     -->
-    <script src="../../phantomjs/bridge.js" type="text/javascript" charset="utf-8"></script>
-
+    <script "./phantomjs/bridge.js" type="text/javascript" charset="utf-8"></script>
     <!-- run mocha -->
     <script type="text/javascript" charset="utf-8">
-        mocha
-            // .globals(['Wombat', 'Apple']) // acceptable globals
-            .run();
+        // If tests run in a real browser
+        if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+            mocha.run();
+        } 
     </script>
 </body>
 </html>

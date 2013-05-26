@@ -24,7 +24,7 @@ module.exports = (grunt) ->
  */
       """
     clean: [
-      'test/css/**'
+      'test/css/harder_better_faster_stronger.css'
       'test/*.js'
       'test/images/**'
       'images/**'
@@ -34,12 +34,12 @@ module.exports = (grunt) ->
     ]
     coffeeify:
       options:
-        debug: true
+        debug: false
       main:
         files: [
           src:
             [
-              'src/main/main.js'
+              'src/main/javascript/main.js'
             ]
           dest: 'main.js'
         ]
@@ -47,9 +47,8 @@ module.exports = (grunt) ->
         files: [
           src:
             [
-              'src/main/main.js'
-              'src/test/js/**/*.js'
-              'src/test/js/*.js'
+              'src/test/javascript/**/*.js'
+              'src/test/javascript/*.js'
             ]
           dest: 'test/main.js'
         ]
@@ -184,7 +183,7 @@ module.exports = (grunt) ->
         ]
         ui: 'bdd'
         run: true
-        colors: false
+        colors: true
         bail: false
       all:
         options:
@@ -237,6 +236,7 @@ module.exports = (grunt) ->
         'src/**'
         'test/*.html'
       ]
+      tasks: 'test'
 
   grunt.loadNpmTasks('grunt-contrib')
   grunt.loadNpmTasks('grunt-mocha')
