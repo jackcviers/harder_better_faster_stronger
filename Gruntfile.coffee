@@ -12,6 +12,10 @@ module.exports = (grunt) ->
     'mocha:all'
     'uglify'
   ]
+  serverTasks = all.concat [
+    'connect'
+
+  ]
   watchTasks = all.concat [
     'mocha:watch'
   ]
@@ -111,6 +115,12 @@ module.exports = (grunt) ->
             dest: 'test/css/<%= pkg.name %>.css'
           }
         ]
+    connect:
+      server:
+        options:
+          keepalive: true
+          port:8080
+          base: './test'
     copy:
       main:
         files:[
@@ -249,5 +259,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-coffeeify')
   grunt.loadNpmTasks('grunt-bump')
 
+  grunt.registerTask('server', serverTasks)
   grunt.registerTask('test', watchTasks)
   grunt.registerTask('default', defaultTasks)
