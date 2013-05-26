@@ -155,6 +155,12 @@ module.exports = (grunt) ->
     jshint:
       options:
         jshintrc: '.jshintrc',
+        globals: 
+          'window': true
+          'global': true
+          'document': true
+          'jQuery': true
+          '$': true
       all: [
         'src/main/javascript/*.js'
         'src/main/javascript/**/*.js'
