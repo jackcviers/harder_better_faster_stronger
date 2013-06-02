@@ -91,12 +91,9 @@ LeftProjection.prototype.flatmap = function(mapper){
   }
   mappedValue = mapper(either.value);
   if(!(mappedValue instanceof Either)) {
-    return new Left(mappedValue);
-  } else if(mappedValue instanceof Right) {
-    return new Left(mappedValue);
-  } else {
-    return mappedValue;
+    throw new TypeError("mapper must return an either in flatmap.");
   }
+  return mappedValue;
 };
 LeftProjection.prototype.foreach = function(sideEffecter) {
   if(either.isLeft()) {
@@ -125,7 +122,7 @@ LeftProjection.prototoype.map = function(mapper) {
 function RightProjection(either) {
   this.either = either;
 };
-LeftProjection.prototype = {};
+RightProjection.prototype = {};
 RightProjection.prototype.every = function(predicate) {
   if(either.isLeft()) {
     return true;
@@ -145,12 +142,9 @@ RightProjection.prototype.flatmap = function(mapper){
   }
   mappedValue = mapper(either.value);
   if(!(mappedValue instanceof Either)) {
-    return new Right(mappedValue);
-  } else if(mappedValue instanceof Left) {
-    return new Right(mappedValue);
-  } else {
-    return mappedValue;
+    throw new TypeError("mapper must return an either in flatmap.");
   }
+  return mappedValue;
 };
 RightProjection.prototype.foreach = function(sideEffecter) {
   if(either.isRight()) {

@@ -1,4 +1,5 @@
 var global = (typeof window !== 'undefined' && window != null) ? window : global;
+var _ = require('underscore');
 var when = require('when');
 var TEMP = global.TEMPORARY;
 var PERM = global.PERSISTENT;
@@ -67,9 +68,36 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
         requestQuota(type, sizeInBytes).then(function(sizeGranted){
           requestFileSystem(type, sizeInBytes, success, failure);
         }, function(error){deferred.reject(error);});
-        return promise;
+n        return promise;
       },
-      Nothing: {}
+      Nothing: {},
+      getPathAndFilenameFromFilename: function(filename) {
+        var filepathAndFilename, filepath, file;
+        if(filename.indexOf('/') !== -1) {
+          filepathAndFilename = filename.split('/');
+          filepath = _.split(filepathAndFilename);
+          file = _.last(filepathAndFilename);
+        } else {
+          filepath = '/';
+          file = filename;
+        }
+        return [filepath, file];
+      },
+      // this returns an either, which is a function with a left
+      // containing an Error of some type, or right, which contains
+      // a value. Lefts and Rights are themselves Eithers, which
+      // means that they are mapable objects. In this case
+      // the Either returned contains an Left(Error) or a 
+      // Right(PromiseOfDirectory)
+      createDirectoryFromPath: function(filepath) {
+        
+      },
+      getFileEntry: function(filesystem){
+        return function(filename){
+          var pathAndFilename = this.getPathAndFilenameFromFilename(filename);
+          
+        };        
+      }
     };
   };
 } else {

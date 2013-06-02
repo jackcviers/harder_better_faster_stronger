@@ -277,7 +277,131 @@ describe('LeftProjection', function(){
     expect(LeftProjection).to.exist
     done();
   });
-  
+  it('should be a Function', function(done){
+    LeftProjection.should.be.an.instanceof(Function);
+    done();
+  });
+  describe('#every(predicate)', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.every).to.exist
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.every.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should return true if the either is a Right', function(done){
+      leftProjectionOfRight.every(function(num){ return num > 3;}).should.be.true;
+      done();
+    });
+    it('should return true if the either is a left and the predicate is true', function(done){
+      leftProjectionOfLeft.every(function(num){ return num <= 1;}).should.be.true;
+      done();
+    });
+    it('should return false if the either is a left and the predicate is false', function(done){
+      leftProjectionOfLeft.every(function(num){ return num < 0;}).should.be.false;
+      done();
+    });
+  });
+  describe('#exists(predicate)', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.exists).to.exist;
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.exists.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should return false if the either is a Right', function(done){
+      leftProjectionOfRight.exists(function(num){ return num > 0;}).should.be.false;
+      done();
+    });
+    it('should return true if the either is a Left and the predicate is true', function(done){
+      leftProjectionOfLeft.exists(function(num){ return num > 0;}).should.be.true;
+      done();
+    });
+    it('should return false if the either is a Left and the predicate is false', function(done){
+      leftProjectionOfLeft.exists(function(num){ return num < 0;}).should.be.false;
+      done();
+    });
+  });
+  describe('#flatmap(mapper)', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.flatmap).to.exist;
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.flatmap.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should return the either unchanged if the either is a Right', function(done){
+      leftProjectionOfRight.flatmap(function(num){ return left(num * num); }).should.deep.equal(rightInstance);
+      done();
+    });
+    it('should return the result of applying mapper to the extracted either value wrapped in an either instance if the eithe is a Left', function(done){
+      var flatmapped = leftProjectionOfLeft.flatmap(function(num){ return left(num * num);});
+      var leftInstanceValue = leftInstance.get();
+      flatmapped.should.be.an.instanceof(Either);
+      flatmapped.value.should.equal(leftInstanceValue * leftInstanceValue);
+      done();
+    });
+  });
+  describe('foreach(sideEffectingFunction)', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.foreach).to.exist;
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.foreach.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should apply the side-effecting function and return the result of it if the either is a left', function(done){
+      leftProjectionOfLeft.foreach(function(num){ console.log('Woohoo!'); return 4;}).should.equal(4);
+      done();
+    });
+    it('should not call the side effecter and return {} if the either is a Right', function(done){
+      var spy = sinon.spy();
+      leftProjectionOfRight.foreach(function(num){ spy(); return 4;}).should.equal({});
+      spy.should.not.have.been.called;
+      done();
+    });
+  });
+  describe('#get()', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.get).to.exist;
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.get.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should return the unwrapped either value if the either is a Left', function(done){
+      leftProjectionOfLeft.get().should.equal(this.leftInstance.get());
+      done();
+    });
+    it('should throw a No such element error when the either is a Right', function(done){
+      leftProjectionOfRight.get().should.throw;
+      done();
+    });
+  });
+  describe('#getOrElse(defaulter)', function(){
+    it('should exist', function(done){
+      expect(leftProjectionOfLeft.getOrElse).to.exist;
+      done();
+    });
+    it('should be a Function', function(done){
+      leftProjectionOfLeft.getOrElse.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should return the unwrapped either value if the either is a Left', function(done){
+      leftProjectionOfLeft.getOrElse(function(){ return 0;}).should.equal(this.leftInstance.get());
+      done();
+    });
+    it('should return the result of the defaulter function if the either is a Right', function(done){
+      leftProjectionOfRight.getOrElse(function(){ return 0;}).should.equal(0);
+      done();
+    });
+  });
 });
 
 describe('conditionalToEither(test, rightValue, leftValue)', function(){
