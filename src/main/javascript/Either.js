@@ -140,11 +140,7 @@ RightProjection.prototype.flatmap = function(mapper){
   if(either.isLeft()){
     return either;
   }
-  mappedValue = mapper(either.value);
-  if(!(mappedValue instanceof Either)) {
-    throw new TypeError("mapper must return an either in flatmap.");
-  }
-  return mappedValue;
+  return mapper(either.value);
 };
 RightProjection.prototype.foreach = function(sideEffecter) {
   if(either.isRight()) {
@@ -168,7 +164,7 @@ RightProjection.prototoype.map = function(mapper) {
   if(either.isLeft()){
     return either;
   }
-  return new Left(mapper(either.value));
+  return new Right(mapper(either.value));
 };
 module.exports = {
   Either: Either,
