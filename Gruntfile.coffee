@@ -169,6 +169,8 @@ module.exports = (grunt) ->
           'window': true
           'global': true
           'document': true
+          'Blob': true
+          'FileReader': true
           'jQuery': true
           '$': true
       all: [
@@ -200,7 +202,7 @@ module.exports = (grunt) ->
         ui: 'bdd'
         run: true
         colors: true
-        bail: false
+        bail: true
       all:
         options:
           reporter: 'Spec'

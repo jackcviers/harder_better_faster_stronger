@@ -3,10 +3,22 @@ var _ = require('underscore');
 var when = require('when');
 var TEMP = global.TEMPORARY;
 var PERM = global.PERSISTENT;
-
+function Left(value){
+  this.value = value;
+}
+function Right(value){
+  this.value = value;
+}
 function Either(value){
   this.value = value;
-};
+}
+function LeftProjection(either) {
+  this.either = either;
+}
+function RightProjection(either) {
+  this.either = either;
+}
+
 Either.prototype = {};
 Either.prototype.fold = function( leftMapper, rightMapper) {
   if(this.isRight()){
@@ -17,19 +29,19 @@ Either.prototype.fold = function( leftMapper, rightMapper) {
 };
 Either.prototype.swap = function() {
   if(this.isRight()) {
-    return Left(this.value);
+    return new Left(this.value);
   }
-  return Right(this.value);
+  return new Right(this.value);
 };
 Either.prototype.joinRight = function() {
   if(this.isRight()) {
     return this.value;
   }
-  return Left(this.value);
+  return new Left(this.value);
 };
 Either.prototype.joinLeft = function() {
   if(this.isRight()) {
-    return Right(this.value);
+    return new Right(this.value);
   }
   return this.value;
 };
@@ -48,9 +60,6 @@ Either.prototype.isLeft = function() {
 Either.prototype.isRight = function(){
   throw new Error('Either is abstract');
 };
-function Left(value){
-  this.value = value;
-};
 Left.prototype = new Either();
 Left.prototype.isRight = function() {
   return false;
@@ -58,113 +67,104 @@ Left.prototype.isRight = function() {
 Left.prototype.isLeft = function() {
   return true;
 };
-function Right(value){
-  this.value = value;
-};
 Right.prototype = new Either();
 Right.prototype.isRight = function () {
   return true;
 };
-Right.prototype.isLeft = funciton() {
+Right.prototype.isLeft = function() {
   return false;
 };
-function LeftProjection(either) {
-  this.either = either;
-}
 LeftProjection.prototype = {};
 LeftProjection.prototype.every = function(predicate) {
-  if(either.isRight()) {
+  if(this.either.isRight()) {
     return true;
   }
-  return predicate(either.value);
+  return predicate(this.either.value);
 };
 LeftProjection.prototype.exists = function(predicate) {
-  if(either.isRight()) {
+  if(this.either.isRight()) {
     return false;
   }
-  return predicate(either.value);
+  return predicate(this.either.value);
 };
 LeftProjection.prototype.flatmap = function(mapper){
   var mappedValue;
-  if(either.isRight()){
-    return either;
+  if(this.either.isRight()){
+    return this.either;
   }
-  mappedValue = mapper(either.value);
+  mappedValue = mapper(this.either.value);
   if(!(mappedValue instanceof Either)) {
     throw new TypeError("mapper must return an either in flatmap.");
   }
   return mappedValue;
 };
 LeftProjection.prototype.foreach = function(sideEffecter) {
-  if(either.isLeft()) {
-    return sideEffecter(either.value);
+  if(this.either.isLeft()) {
+    return sideEffecter(this.either.value);
   }
   return {};
 };
 LeftProjection.prototype.get = function() {
-  if(either.isLeft()) {
-    return either.value;
+  if(this.either.isLeft()) {
+    return this.either.value;
   }
   throw new Error('No such element.');
 };
 LeftProjection.prototype.getOrElse = function(defaulter) {
-  if(either.isLeft()) {
-    return either.value;
+  if(this.either.isLeft()) {
+    return this.either.value;
   }
   return defaulter();
 };
-LeftProjection.prototoype.map = function(mapper) {
-  if(either.isRight()){
-    return either;
+LeftProjection.prototype.map = function(mapper) {
+  if(this.either.isRight()){
+    return this.either;
   }
-  return new Left(mapper(either.value));
-};
-function RightProjection(either) {
-  this.either = either;
+  return new Left(mapper(this.either.value));
 };
 RightProjection.prototype = {};
 RightProjection.prototype.every = function(predicate) {
-  if(either.isLeft()) {
+  if(this.either.isLeft()) {
     return true;
   }
-  return predicate(either.value);
+  return predicate(this.either.value);
 };
 RightProjection.prototype.exists = function(predicate) {
-  if(either.isLeft()){
+  if(this.either.isLeft()){
     return false;
   }
-  return predicate(either.value);
+  return predicate(this.either.value);
 };
 RightProjection.prototype.flatmap = function(mapper){
   var mappedValue;
-  if(either.isLeft()){
-    return either;
+  if(this.either.isLeft()){
+    return this.either;
   }
-  return mapper(either.value);
+  return mapper(this.either.value);
 };
 RightProjection.prototype.foreach = function(sideEffecter) {
-  if(either.isRight()) {
-    return sideEffecter(either.value);
+  if(this.either.isRight()) {
+    return sideEffecter(this.either.value);
   }
   return {};
 };
 RightProjection.prototype.get = function() {
-  if(either.isRight()) {
-    return either.value
+  if(this.either.isRight()) {
+    return this.either.value;
   }
   throw new Error('No such element.');
 };
 RightProjection.prototype.getOrElse = function(defaulter) {
-  if(either.isRight()){
-    return either.value;
+  if(this.either.isRight()){
+    return this.either.value;
   }
-  return defaluter();
+  return defaulter();
 };
-RightProjection.prototoype.map = function(mapper) {
-  if(either.isLeft()){
-    return either;
+RightProjection.prototype.map = function(mapper) {
+  if(this.either.isLeft()){
+    return this.either;
   }
-  return new Right(mapper(either.value));
+  return new Right(mapper(this.either.value));
 };
 module.exports = {
   Either: Either,
