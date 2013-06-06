@@ -1,5 +1,6 @@
 var when = require('when');
 var LocalFileSystem = require('./LocalFileSystem');
+var uuid = require('node-uuid');
 
 module.exports = {
   File: { 
@@ -14,14 +15,16 @@ module.exports = {
       var deferred, promise, methodMap, fs;
       deferred = when.defer();
       promise = deferred.promise;
-      if((typeof model === 'undefined' || model === null) || (typeof model.collection === 'undefined' || model.collection === null) || (typeof model.collection.filesystem === 'undefined' || model.collection.filesystem === null) {
-        deferred.reject(new TypeError('Your model must belong to a collection of files, and that collection must have a filesystem instance.'))
+      if(
+        (typeof model === 'undefined' || model === null) || (typeof model.collection === 'undefined' || model.collection === null) || (typeof model.collection.filesystem === 'undefined' || model.collection.filesystem === null)
+      ) {
+        deferred.reject(new TypeError('Your model must belong to a collection of files, and that collection must have a filesystem instance.'));
       } else {
         fs = model.collection.filesystem;
       }
       methodMap = {
         'create': function(model, options) {
-          var getPromisedFile, getPromisedFileWriter, deferred, promise, promiseOfFile;
+          var getPromisedFile, getPromisedFileWriter, deferred, promise, promiseOfFile, getPromiseOfWriteSuccess;
           // The file writer api is a big
           // cps api. To unmangle all the 
           // nested callbacks, we'll lift
@@ -32,8 +35,8 @@ module.exports = {
           // each step need not know about
           // the next step in the process.
           getPromisedFile = function() {
-            getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
-            model.id = uuid();
+            var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
+            model.id = uuid.v4();
             getFileDeferred = when.defer();
             getFilePromise = deferred.promise;
             getFileSuccess = (function(that) {
@@ -113,11 +116,11 @@ module.exports = {
         // to get our data. I chose as array buffer
         // because we can use the file result while it is being read.
         'read': function(model, options) {
-          var getPromisedFileEntry, getPromisedFile, deferred, promise, promisedFile;
+          var getPromisedFileEntry, getPromisedFile, deferred, promise, promisedFile, getPromisedFileData;
           deferred = when.defer();
           promise = deferred.promise;
           getPromisedFileEntry = function() {
-            getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
+            var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
             getFileDeferred = when.defer();
             getFilePromise = deferred.promise;
             getFileSuccess = (function(that) {
@@ -136,18 +139,13 @@ module.exports = {
           getPromisedFile = function(fileEntry) {
             var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
             getFileDeferred = when.defer();
-            getFilePromise = getFileReaderDeferred.promise;
-            getFileSuccess = (function(that) { 
-              this = that;
-              return function(file) {
-                getFileReaderDeferred.resolve(file);
-              };
-            }(this));
-            getFileFailure = (function(that) { 
-              return function(error) {
-                getFileReaderDeferred.reject(error);
-              };
-            }(this));
+            getFilePromise = getFileDeferred.promise;
+            getFileSuccess = function(file) {
+              getFileDeferred.resolve(file);
+            };
+            getFileFailure = function(error) {
+              getFileDeferred.reject(error);
+            };
             fileEntry.file(getFileSuccess, getFileFailure);
             return getFilePromise;
           };
@@ -168,7 +166,7 @@ module.exports = {
             fileReader.onloadedend = fileDataSuccess;
             fileReader.onprogress = fileDataProgress;
             fileReader.onerror = fileDataFailure;
-            fileRreader.readAsArrayBuffer(file);
+            fileReader.readAsArrayBuffer(file);
             return fileDataPromise;
           };
           promisedFile = getPromisedFileEntry();
@@ -193,7 +191,7 @@ module.exports = {
         'delete': function(model, options) {
           
         }
-      }
+      };
       
       return promise;
     }

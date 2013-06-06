@@ -37,17 +37,6 @@ describe('LocalFileSystem', function() {
       this.name = this.fs = null;
       done();
     });
-    it('should return an object with keys name, requestTemporaryFileSystem(), and requestPersistentFileSystem() and Nothing', function(done){
-      _.keys(this.fs).should.satisfy(function(arrOfKeys){
-        var partialContains = (function(keys){
-          return function(str) {
-            return _.contains(keys, str);
-          };
-        }(arrOfKeys));
-        return (partialContains("name") && partialContains("requestTemporaryFileSystem") && partialContains("requestPersistentFileSystem"));
-      });
-      done();
-    });
     it('should return an object with name set to the passed value', function(done){
       this.fs.name.should.equal(this.name);
       done();
@@ -101,6 +90,65 @@ describe('LocalFileSystem', function() {
             function(){spy(); testSpyCall();},
             function(){ testSpyCall();}
           );
+        });
+      });
+    });
+    describe('.getPathAndFilenameFromFilename(filename)', function(){
+      beforeEach(function(done){
+        this.expectedFilename = "path.ext"
+        this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
+        this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
+        this.expectedPathSegments = ["test", "me", "for"];
+        done();
+      });
+      afterEach(function(done){
+        this.pathAndFilename = this.pathAndFilename = this.expectedPathSegments = {};
+        done();
+      });
+      it('this.inputFilenameAndPath should be "/test/me/for/path.ext"', function(done){
+        this.inputFilenameAndPath.should.equal("/test/me/for/path.ext");
+        done();
+      });
+      it('should exist', function(done){
+        expect(this.fs.getPathAndFilenameFromFilename).to.exist;
+        done();
+      });
+      it('should be a function', function(done){
+        this.fs.getPathAndFilenameFromFilename.should.be.an.instanceof(Function);
+        done();
+      });
+      it('should return an array', function(done){
+        this.pathAndFilename.should.be.an.instanceof(Array);
+        done();
+      });
+      it('should return an array of length 2', function(done){
+        this.pathAndFilename.length.should.equal(2);
+        done();
+      });
+      describe('[0]', function(){
+        it('should be an array', function(done){
+          this.pathAndFilename[0].should.be.an.instanceof(Array);
+          done();
+        });
+        it('should be an array of strings', function(done){
+          _.every(this.pathAndFilename[0], function(pathSegment){
+            return _.isString(pathSegment);
+          }).should.be.true;
+          done();
+        });
+        it('should match the expected array', function(done){
+          this.pathAndFilename[0].should.deep.equal(this.expectedPathSegments);
+          done();
+        });
+      });
+      describe('[1]', function(done){
+        it('shoud be a string', function(done){
+          _.isString(this.pathAndFilename[1]).should.be.true;
+          done();
+        });
+        it('should equal the expected filename', function(done){
+          this.pathAndFilename[1].should.equal(this.expectedFilename);
+          done();
         });
       });
     });
