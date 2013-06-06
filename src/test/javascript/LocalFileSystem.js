@@ -41,6 +41,44 @@ describe('LocalFileSystem', function() {
       this.fs.name.should.equal(this.name);
       done();
     });
+    describe('.createDirectoryFromPath(filesystem)(filepath)', function(){
+      it('should exist', function(done){
+        expect(this.fs.createDirectoryFromPath).to.exist;
+        done();
+      });
+      describe('.createDirectoryFromPath(this.fs)', function(){
+        beforeEach(function(done){
+          this.expectedFilename = "path.ext"
+          this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
+          this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
+          this.expectedPathSegments = ["test", "me", "for"];
+          this.boundDirectoryCreator = this.fs.createDirectoryFromPath(this.fs);
+          done();
+        });
+        afterEach(function(done){
+          this.boundDirectoryCreator = this.expectedFilename, this.inputFilenameAndPath, this.pathAndFilename, this.expectedPathSegments = {};
+          done();
+        });
+        it('should return a function', function(done){
+          this.boundDirectoryCreator.should.be.an.instanceof(Function);
+          done();
+        });
+        testInBrowserOnly(this)(function(){
+          it('should return a promise of a directory', function(done){
+            expect(this.boundDirectoryCreator(this.inputFilenameAndPath).then).to.exist;
+            done();
+          });
+          it('should create the directory /test/me/for', function(done){
+            var spy, promise;
+            spy = sinon.spy();
+            promise = this.boundDirectoryCreator(this.inputFilenameAndPath);
+            promise.then(function(directory){ spy(); }, function(err){});
+            spy.should.have.been.called;
+            done();
+          });
+        });
+      });
+    });
     describe('.requestTemporaryFileSystem(sizeInMB)', function(){
       it('should be a Function', function(done){
         this.fs.requestTemporaryFileSystem.should.be.an.instanceof(Function);

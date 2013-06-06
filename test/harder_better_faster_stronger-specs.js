@@ -3133,6 +3133,71 @@ helpers = helpers || Handlebars.helpers; data = data || {};
   return buffer;
   };
 ;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0](function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
+(function(){var global = global ||  window;
+var chai = require('chai');
+var sinon = require('sinon');
+var sinonChai = require('sinon-chai');
+var expect = chai.expect;
+var should = chai.should();
+chai.use(sinonChai);
+var jQuery = global.jQuery;
+jQuery = jQuery || require('jquery-browserify');
+var $ = jQuery.$;
+var _ = global._;
+_ = _ || require('underscore');
+var Backbone = global.Backbone;
+Backbone = Backbone ||  require('backbone');
+Backbone.$ = $
+var File = require('../../main/javascript/Backbone.File.Sync.js');
+Backbone = _.extend(Backbone, File);
+var when = require('when');
+
+describe('Backbone', function(){
+  describe('.File', function(){
+    it('should exist', function(done){
+      expect(Backbone.File).to.exist
+      done()
+    });
+    describe('.sync(method, model, options)', function(){
+      // stubbing out the actual browser file system api is kind of a big job.
+      // we'll stub Backbone.File.sync to call success instead.
+      it('should be a function', function(done){
+        Backbone.File.sync.should.be.an.instanceof(Function);
+        done();
+      });
+      describe('writing with sync should return a promise', function(){
+        beforeEach(function(done){
+          this.stub = sinon.stub(Backbone.File, "sync", function(){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            deferred.resolve({name: 'filename', data: []});
+            return promise;
+          });
+          done();
+        });
+
+        afterEach(function(done){
+          Backbone.File.sync.restore();
+          done();
+        });
+
+        it('should return a promise', function(done){
+          expect(Backbone.File.sync({}).then).to.exist
+          done()
+        });
+
+        it('should resolve the promise on success, with a file object,', function(done) {
+          Backbone.File.sync({}).inspect().state.should.equal("fulfilled");
+          done();
+        });
+      });
+    });
+  });
+});
+
+})()
+},{"../../main/javascript/Backbone.File.Sync.js":2,"sinon":3,"jquery-browserify":4,"sinon-chai":5,"underscore":6,"backbone":7,"chai":8,"when":9}],10:[function(require,module,exports){
 (function(){var global = global || window;
 var chai = require('chai');
 var sinon = require('sinon');
@@ -3832,72 +3897,7 @@ describe('right', function(){
 });
 
 })()
-},{"../../main/javascript/Either.js":2,"sinon":3,"underscore":4,"sinon-chai":5,"chai":6}],7:[function(require,module,exports){
-(function(){var global = global ||  window;
-var chai = require('chai');
-var sinon = require('sinon');
-var sinonChai = require('sinon-chai');
-var expect = chai.expect;
-var should = chai.should();
-chai.use(sinonChai);
-var jQuery = global.jQuery;
-jQuery = jQuery || require('jquery-browserify');
-var $ = jQuery.$;
-var _ = global._;
-_ = _ || require('underscore');
-var Backbone = global.Backbone;
-Backbone = Backbone ||  require('backbone');
-Backbone.$ = $
-var File = require('../../main/javascript/Backbone.File.Sync.js');
-Backbone = _.extend(Backbone, File);
-var when = require('when');
-
-describe('Backbone', function(){
-  describe('.File', function(){
-    it('should exist', function(done){
-      expect(Backbone.File).to.exist
-      done()
-    });
-    describe('.sync(method, model, options)', function(){
-      // stubbing out the actual browser file system api is kind of a big job.
-      // we'll stub Backbone.File.sync to call success instead.
-      it('should be a function', function(done){
-        Backbone.File.sync.should.be.an.instanceof(Function);
-        done();
-      });
-      describe('writing with sync should return a promise', function(){
-        beforeEach(function(done){
-          this.stub = sinon.stub(Backbone.File, "sync", function(){
-            var deferred, promise;
-            deferred = when.defer();
-            promise = deferred.promise;
-            deferred.resolve({name: 'filename', data: []});
-            return promise;
-          });
-          done();
-        });
-
-        afterEach(function(done){
-          Backbone.File.sync.restore();
-          done();
-        });
-
-        it('should return a promise', function(done){
-          expect(Backbone.File.sync({}).then).to.exist
-          done()
-        });
-
-        it('should resolve the promise on success, with a file object,', function(done) {
-          Backbone.File.sync({}).inspect().state.should.equal("fulfilled");
-          done();
-        });
-      });
-    });
-  });
-});
-
-})()
-},{"../../main/javascript/Backbone.File.Sync.js":8,"sinon":3,"sinon-chai":5,"jquery-browserify":9,"backbone":10,"underscore":4,"chai":6,"when":11}],12:[function(require,module,exports){
+},{"../../main/javascript/Either.js":11,"sinon":3,"underscore":6,"sinon-chai":5,"chai":8}],12:[function(require,module,exports){
 (function(){var global = global || window;
 var chai = require('chai');
 var sinon = require('sinon');
@@ -3940,6 +3940,44 @@ describe('LocalFileSystem', function() {
     it('should return an object with name set to the passed value', function(done){
       this.fs.name.should.equal(this.name);
       done();
+    });
+    describe('.createDirectoryFromPath(filesystem)(filepath)', function(){
+      it('should exist', function(done){
+        expect(this.fs.createDirectoryFromPath).to.exist;
+        done();
+      });
+      describe('.createDirectoryFromPath(this.fs)', function(){
+        beforeEach(function(done){
+          this.expectedFilename = "path.ext"
+          this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
+          this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
+          this.expectedPathSegments = ["test", "me", "for"];
+          this.boundDirectoryCreator = this.fs.createDirectoryFromPath(this.fs);
+          done();
+        });
+        afterEach(function(done){
+          this.boundDirectoryCreator = this.expectedFilename, this.inputFilenameAndPath, this.pathAndFilename, this.expectedPathSegments = {};
+          done();
+        });
+        it('should return a function', function(done){
+          this.boundDirectoryCreator.should.be.an.instanceof(Function);
+          done();
+        });
+        testInBrowserOnly(this)(function(){
+          it('should return a promise of a directory', function(done){
+            expect(this.boundDirectoryCreator(this.inputFilenameAndPath).then).to.exist;
+            done();
+          });
+          it('should create the directory /test/me/for', function(done){
+            var spy, promise;
+            spy = sinon.spy();
+            promise = this.boundDirectoryCreator(this.inputFilenameAndPath);
+            promise.then(function(directory){ spy(); }, function(err){});
+            spy.should.have.been.called;
+            done();
+          });
+        });
+      });
     });
     describe('.requestTemporaryFileSystem(sizeInMB)', function(){
       it('should be a Function', function(done){
@@ -4056,7 +4094,7 @@ describe('LocalFileSystem', function() {
 });
 
 })()
-},{"../../main/javascript/LocalFileSystem.js":13,"sinon":3,"sinon-chai":5,"underscore":4,"chai":6}],5:[function(require,module,exports){
+},{"../../main/javascript/LocalFileSystem.js":13,"sinon":3,"sinon-chai":5,"underscore":6,"chai":8}],5:[function(require,module,exports){
 (function(){(function (sinonChai) {
     "use strict";
 
@@ -4168,7 +4206,7 @@ describe('LocalFileSystem', function() {
 }));
 
 })()
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 (function(){//     Underscore.js 1.4.4
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -5397,7 +5435,7 @@ describe('LocalFileSystem', function() {
 }).call(this);
 
 })()
-},{}],9:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 (function(){// Uses Node, AMD or browser globals to create a module.
 
 // If you want something that will work in other stricter CommonJS environments,
@@ -14786,7 +14824,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function(process){/** @license MIT License (c) copyright 2011-2013 original author or authors */
 
 /**
@@ -15964,7 +16002,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":16}],6:[function(require,module,exports){
+},{"events":16}],8:[function(require,module,exports){
 module.exports = require('./lib/chai');
 
 },{"./lib/chai":17}],16:[function(require,module,exports){
@@ -16154,202 +16192,6 @@ EventEmitter.prototype.listeners = function(type) {
 
 })(require("__browserify_process"))
 },{"__browserify_process":14}],2:[function(require,module,exports){
-(function(){var global = (typeof window !== 'undefined' && window != null) ? window : global;
-var _ = require('underscore');
-var when = require('when');
-var TEMP = global.TEMPORARY;
-var PERM = global.PERSISTENT;
-function Left(value){
-  this.value = value;
-}
-function Right(value){
-  this.value = value;
-}
-function Either(value){
-  this.value = value;
-}
-function LeftProjection(either) {
-  this.either = either;
-}
-function RightProjection(either) {
-  this.either = either;
-}
-
-Either.prototype = {};
-Either.prototype.fold = function( leftMapper, rightMapper) {
-  if(this.isRight()){
-    return rightMapper(this.value);
-  }else{
-    return leftMapper(this.value);
-  }
-};
-Either.prototype.swap = function() {
-  if(this.isRight()) {
-    return new Left(this.value);
-  }
-  return new Right(this.value);
-};
-Either.prototype.joinRight = function() {
-  if(this.isRight()) {
-    return this.value;
-  }
-  return new Left(this.value);
-};
-Either.prototype.joinLeft = function() {
-  if(this.isRight()) {
-    return new Right(this.value);
-  }
-  return this.value;
-};
-Either.prototype.left = function () {
-  return new LeftProjection(this);
-};
-Either.prototype.right = function () {
-  return new RightProjection(this);
-};
-Either.prototype.merge = function() {
-  return [this.value];
-};
-Either.prototype.isLeft = function() {
-  throw new Error('Either is abstract');
-};
-Either.prototype.isRight = function(){
-  throw new Error('Either is abstract');
-};
-Left.prototype = new Either();
-Left.prototype.isRight = function() {
-  return false;
-};
-Left.prototype.isLeft = function() {
-  return true;
-};
-Right.prototype = new Either();
-Right.prototype.isRight = function () {
-  return true;
-};
-Right.prototype.isLeft = function() {
-  return false;
-};
-LeftProjection.prototype = {};
-LeftProjection.prototype.every = function(predicate) {
-  if(this.either.isRight()) {
-    return true;
-  }
-  return predicate(this.either.value);
-};
-LeftProjection.prototype.exists = function(predicate) {
-  if(this.either.isRight()) {
-    return false;
-  }
-  return predicate(this.either.value);
-};
-LeftProjection.prototype.flatmap = function(mapper){
-  var mappedValue;
-  if(this.either.isRight()){
-    return this.either;
-  }
-  mappedValue = mapper(this.either.value);
-  if(!(mappedValue instanceof Either)) {
-    throw new TypeError("mapper must return an either in flatmap.");
-  }
-  return mappedValue;
-};
-LeftProjection.prototype.foreach = function(sideEffecter) {
-  if(this.either.isLeft()) {
-    return sideEffecter(this.either.value);
-  }
-  return {};
-};
-LeftProjection.prototype.get = function() {
-  if(this.either.isLeft()) {
-    return this.either.value;
-  }
-  throw new Error('No such element.');
-};
-LeftProjection.prototype.getOrElse = function(defaulter) {
-  if(this.either.isLeft()) {
-    return this.either.value;
-  }
-  return defaulter();
-};
-LeftProjection.prototype.map = function(mapper) {
-  if(this.either.isRight()){
-    return this.either;
-  }
-  return new Left(mapper(this.either.value));
-};
-RightProjection.prototype = {};
-RightProjection.prototype.every = function(predicate) {
-  if(this.either.isLeft()) {
-    return true;
-  }
-  return predicate(this.either.value);
-};
-RightProjection.prototype.exists = function(predicate) {
-  if(this.either.isLeft()){
-    return false;
-  }
-  return predicate(this.either.value);
-};
-RightProjection.prototype.flatmap = function(mapper){
-  var mappedValue;
-  if(this.either.isLeft()){
-    return this.either;
-  }
-  return mapper(this.either.value);
-};
-RightProjection.prototype.foreach = function(sideEffecter) {
-  if(this.either.isRight()) {
-    return sideEffecter(this.either.value);
-  }
-  return {};
-};
-RightProjection.prototype.get = function() {
-  if(this.either.isRight()) {
-    return this.either.value;
-  }
-  throw new Error('No such element.');
-};
-RightProjection.prototype.getOrElse = function(defaulter) {
-  if(this.either.isRight()){
-    return this.either.value;
-  }
-  return defaulter();
-};
-RightProjection.prototype.map = function(mapper) {
-  if(this.either.isLeft()){
-    return this.either;
-  }
-  return new Right(mapper(this.either.value));
-};
-module.exports = {
-  Either: Either,
-  Left: Left,
-  Right: Right,
-  LeftProjection: LeftProjection,
-  RightProjection: RightProjection,
-  conditionalToEither: function(test, rightValue, leftValue) {
-    if(test){
-      return new Right(rightValue);
-    }
-    return new Left(leftValue);
-  },
-  negationToEither: function(test, rightValue, leftValue) {
-    if(test){
-      return new Left(leftValue);
-    }
-    return new Right(rightValue);
-  },
-  left: function(value){
-    return new Left(value);
-  },
-  right: function(value) {
-    return new Right(value);
-  }
-};
-
-})()
-},{"underscore":4,"when":11}],8:[function(require,module,exports){
 (function(){var when = require('when');
 var LocalFileSystem = require('./LocalFileSystem');
 var uuid = require('node-uuid');
@@ -16551,7 +16393,203 @@ module.exports = {
 };
 
 })()
-},{"./LocalFileSystem":13,"node-uuid":18,"when":11}],13:[function(require,module,exports){
+},{"./LocalFileSystem":13,"node-uuid":18,"when":9}],11:[function(require,module,exports){
+(function(){var global = (typeof window !== 'undefined' && window != null) ? window : global;
+var _ = require('underscore');
+var when = require('when');
+var TEMP = global.TEMPORARY;
+var PERM = global.PERSISTENT;
+function Left(value){
+  this.value = value;
+}
+function Right(value){
+  this.value = value;
+}
+function Either(value){
+  this.value = value;
+}
+function LeftProjection(either) {
+  this.either = either;
+}
+function RightProjection(either) {
+  this.either = either;
+}
+
+Either.prototype = {};
+Either.prototype.fold = function( leftMapper, rightMapper) {
+  if(this.isRight()){
+    return rightMapper(this.value);
+  }else{
+    return leftMapper(this.value);
+  }
+};
+Either.prototype.swap = function() {
+  if(this.isRight()) {
+    return new Left(this.value);
+  }
+  return new Right(this.value);
+};
+Either.prototype.joinRight = function() {
+  if(this.isRight()) {
+    return this.value;
+  }
+  return new Left(this.value);
+};
+Either.prototype.joinLeft = function() {
+  if(this.isRight()) {
+    return new Right(this.value);
+  }
+  return this.value;
+};
+Either.prototype.left = function () {
+  return new LeftProjection(this);
+};
+Either.prototype.right = function () {
+  return new RightProjection(this);
+};
+Either.prototype.merge = function() {
+  return [this.value];
+};
+Either.prototype.isLeft = function() {
+  throw new Error('Either is abstract');
+};
+Either.prototype.isRight = function(){
+  throw new Error('Either is abstract');
+};
+Left.prototype = new Either();
+Left.prototype.isRight = function() {
+  return false;
+};
+Left.prototype.isLeft = function() {
+  return true;
+};
+Right.prototype = new Either();
+Right.prototype.isRight = function () {
+  return true;
+};
+Right.prototype.isLeft = function() {
+  return false;
+};
+LeftProjection.prototype = {};
+LeftProjection.prototype.every = function(predicate) {
+  if(this.either.isRight()) {
+    return true;
+  }
+  return predicate(this.either.value);
+};
+LeftProjection.prototype.exists = function(predicate) {
+  if(this.either.isRight()) {
+    return false;
+  }
+  return predicate(this.either.value);
+};
+LeftProjection.prototype.flatmap = function(mapper){
+  var mappedValue;
+  if(this.either.isRight()){
+    return this.either;
+  }
+  mappedValue = mapper(this.either.value);
+  if(!(mappedValue instanceof Either)) {
+    throw new TypeError("mapper must return an either in flatmap.");
+  }
+  return mappedValue;
+};
+LeftProjection.prototype.foreach = function(sideEffecter) {
+  if(this.either.isLeft()) {
+    return sideEffecter(this.either.value);
+  }
+  return {};
+};
+LeftProjection.prototype.get = function() {
+  if(this.either.isLeft()) {
+    return this.either.value;
+  }
+  throw new Error('No such element.');
+};
+LeftProjection.prototype.getOrElse = function(defaulter) {
+  if(this.either.isLeft()) {
+    return this.either.value;
+  }
+  return defaulter();
+};
+LeftProjection.prototype.map = function(mapper) {
+  if(this.either.isRight()){
+    return this.either;
+  }
+  return new Left(mapper(this.either.value));
+};
+RightProjection.prototype = {};
+RightProjection.prototype.every = function(predicate) {
+  if(this.either.isLeft()) {
+    return true;
+  }
+  return predicate(this.either.value);
+};
+RightProjection.prototype.exists = function(predicate) {
+  if(this.either.isLeft()){
+    return false;
+  }
+  return predicate(this.either.value);
+};
+RightProjection.prototype.flatmap = function(mapper){
+  var mappedValue;
+  if(this.either.isLeft()){
+    return this.either;
+  }
+  return mapper(this.either.value);
+};
+RightProjection.prototype.foreach = function(sideEffecter) {
+  if(this.either.isRight()) {
+    return sideEffecter(this.either.value);
+  }
+  return {};
+};
+RightProjection.prototype.get = function() {
+  if(this.either.isRight()) {
+    return this.either.value;
+  }
+  throw new Error('No such element.');
+};
+RightProjection.prototype.getOrElse = function(defaulter) {
+  if(this.either.isRight()){
+    return this.either.value;
+  }
+  return defaulter();
+};
+RightProjection.prototype.map = function(mapper) {
+  if(this.either.isLeft()){
+    return this.either;
+  }
+  return new Right(mapper(this.either.value));
+};
+module.exports = {
+  Either: Either,
+  Left: Left,
+  Right: Right,
+  LeftProjection: LeftProjection,
+  RightProjection: RightProjection,
+  conditionalToEither: function(test, rightValue, leftValue) {
+    if(test){
+      return new Right(rightValue);
+    }
+    return new Left(leftValue);
+  },
+  negationToEither: function(test, rightValue, leftValue) {
+    if(test){
+      return new Left(leftValue);
+    }
+    return new Right(rightValue);
+  },
+  left: function(value){
+    return new Left(value);
+  },
+  right: function(value) {
+    return new Right(value);
+  }
+};
+
+})()
+},{"underscore":6,"when":9}],13:[function(require,module,exports){
 (function(){var global = (typeof window !== 'undefined' && window != null) ? window : global;
 var _ = require('underscore');
 var when = require('when');
@@ -16564,6 +16602,14 @@ var base = {
   getPathAndFilenameFromFilename: function(filename){
     var splitFilename = filename.split('/');
     return [_.rest(_.initial(splitFilename)), _.last(splitFilename)];
+  },
+  createDirectoryFromPath: function(filesystem){
+    return function(filepath){
+      var deferred, promise;
+      deferred = when.defer();
+      promise = deferred.promise;
+      return promise;
+    };
   }
 };
 if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
@@ -16626,18 +16672,6 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
         return promise;
       },
       Nothing: {},
-      // getPathAndFilenameFromFilename: function(filename) {
-      //   var filepathAndFilename, filepath, file;
-      //   if(filename.indexOf('/') !== -1) {
-      //     filepathAndFilename = filename.split('/');
-      //     filepath = _.split(filepathAndFilename);
-      //     file = _.last(filepathAndFilename);
-      //   } else {
-      //     filepath = '/';
-      //     file = filename;
-      //   }
-      //   return [filepath, file];
-      // },
       // // this returns an either, which is a function with a left
       // // containing an Error of some type, or right, which contains
       // // a value. Lefts and Rights are themselves Eithers, which
@@ -16695,7 +16729,7 @@ module.exports = LocalFileSystem;
 
 
 })()
-},{"./Either":2,"underscore":4,"when":11}],19:[function(require,module,exports){
+},{"./Either":11,"underscore":6,"when":9}],19:[function(require,module,exports){
 require=(function(e,t,n,r){function i(r){if(!n[r]){if(!t[r]){if(e)return e(r);throw new Error("Cannot find module '"+r+"'")}var s=n[r]={exports:{}};t[r][0](function(e){var n=t[r][1][e];return i(n?n:e)},s,s.exports)}return n[r].exports}for(var s=0;s<r.length;s++)i(r[s]);return i})(typeof require!=="undefined"&&require,{1:[function(require,module,exports){
 exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
   var e, m,
@@ -20808,7 +20842,7 @@ SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 }());
 
 })(require("__browserify_buffer").Buffer)
-},{"crypto":20,"__browserify_buffer":19}],10:[function(require,module,exports){
+},{"crypto":20,"__browserify_buffer":19}],7:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -22382,7 +22416,353 @@ SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 }).call(this);
 
 })()
-},{"underscore":4}],21:[function(require,module,exports){
+},{"underscore":6}],3:[function(require,module,exports){
+(function(){/*jslint eqeqeq: false, onevar: false, forin: true, nomen: false, regexp: false, plusplus: false*/
+/*global module, require, __dirname, document*/
+/**
+ * Sinon core utilities. For internal use only.
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+var sinon = (function (buster) {
+    var div = typeof document != "undefined" && document.createElement("div");
+    var hasOwn = Object.prototype.hasOwnProperty;
+
+    function isDOMNode(obj) {
+        var success = false;
+
+        try {
+            obj.appendChild(div);
+            success = div.parentNode == obj;
+        } catch (e) {
+            return false;
+        } finally {
+            try {
+                obj.removeChild(div);
+            } catch (e) {
+                // Remove failed, not much we can do about that
+            }
+        }
+
+        return success;
+    }
+
+    function isElement(obj) {
+        return div && obj && obj.nodeType === 1 && isDOMNode(obj);
+    }
+
+    function isFunction(obj) {
+        return typeof obj === "function" || !!(obj && obj.constructor && obj.call && obj.apply);
+    }
+
+    function mirrorProperties(target, source) {
+        for (var prop in source) {
+            if (!hasOwn.call(target, prop)) {
+                target[prop] = source[prop];
+            }
+        }
+    }
+
+    var sinon = {
+        wrapMethod: function wrapMethod(object, property, method) {
+            if (!object) {
+                throw new TypeError("Should wrap property of object");
+            }
+
+            if (typeof method != "function") {
+                throw new TypeError("Method wrapper should be function");
+            }
+
+            var wrappedMethod = object[property];
+
+            if (!isFunction(wrappedMethod)) {
+                throw new TypeError("Attempted to wrap " + (typeof wrappedMethod) + " property " +
+                                    property + " as function");
+            }
+
+            if (wrappedMethod.restore && wrappedMethod.restore.sinon) {
+                throw new TypeError("Attempted to wrap " + property + " which is already wrapped");
+            }
+
+            if (wrappedMethod.calledBefore) {
+                var verb = !!wrappedMethod.returns ? "stubbed" : "spied on";
+                throw new TypeError("Attempted to wrap " + property + " which is already " + verb);
+            }
+
+            // IE 8 does not support hasOwnProperty on the window object.
+            var owned = hasOwn.call(object, property);
+            object[property] = method;
+            method.displayName = property;
+
+            method.restore = function () {
+                // For prototype properties try to reset by delete first.
+                // If this fails (ex: localStorage on mobile safari) then force a reset
+                // via direct assignment.
+                if (!owned) {
+                    delete object[property];
+                }
+                if (object[property] === method) {
+                    object[property] = wrappedMethod;
+                }
+            };
+
+            method.restore.sinon = true;
+            mirrorProperties(method, wrappedMethod);
+
+            return method;
+        },
+
+        extend: function extend(target) {
+            for (var i = 1, l = arguments.length; i < l; i += 1) {
+                for (var prop in arguments[i]) {
+                    if (arguments[i].hasOwnProperty(prop)) {
+                        target[prop] = arguments[i][prop];
+                    }
+
+                    // DONT ENUM bug, only care about toString
+                    if (arguments[i].hasOwnProperty("toString") &&
+                        arguments[i].toString != target.toString) {
+                        target.toString = arguments[i].toString;
+                    }
+                }
+            }
+
+            return target;
+        },
+
+        create: function create(proto) {
+            var F = function () {};
+            F.prototype = proto;
+            return new F();
+        },
+
+        deepEqual: function deepEqual(a, b) {
+            if (sinon.match && sinon.match.isMatcher(a)) {
+                return a.test(b);
+            }
+            if (typeof a != "object" || typeof b != "object") {
+                return a === b;
+            }
+
+            if (isElement(a) || isElement(b)) {
+                return a === b;
+            }
+
+            if (a === b) {
+                return true;
+            }
+
+            if ((a === null && b !== null) || (a !== null && b === null)) {
+                return false;
+            }
+
+            var aString = Object.prototype.toString.call(a);
+            if (aString != Object.prototype.toString.call(b)) {
+                return false;
+            }
+
+            if (aString == "[object Array]") {
+                if (a.length !== b.length) {
+                    return false;
+                }
+
+                for (var i = 0, l = a.length; i < l; i += 1) {
+                    if (!deepEqual(a[i], b[i])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            var prop, aLength = 0, bLength = 0;
+
+            for (prop in a) {
+                aLength += 1;
+
+                if (!deepEqual(a[prop], b[prop])) {
+                    return false;
+                }
+            }
+
+            for (prop in b) {
+                bLength += 1;
+            }
+
+            if (aLength != bLength) {
+                return false;
+            }
+
+            return true;
+        },
+
+        functionName: function functionName(func) {
+            var name = func.displayName || func.name;
+
+            // Use function decomposition as a last resort to get function
+            // name. Does not rely on function decomposition to work - if it
+            // doesn't debugging will be slightly less informative
+            // (i.e. toString will say 'spy' rather than 'myFunc').
+            if (!name) {
+                var matches = func.toString().match(/function ([^\s\(]+)/);
+                name = matches && matches[1];
+            }
+
+            return name;
+        },
+
+        functionToString: function toString() {
+            if (this.getCall && this.callCount) {
+                var thisValue, prop, i = this.callCount;
+
+                while (i--) {
+                    thisValue = this.getCall(i).thisValue;
+
+                    for (prop in thisValue) {
+                        if (thisValue[prop] === this) {
+                            return prop;
+                        }
+                    }
+                }
+            }
+
+            return this.displayName || "sinon fake";
+        },
+
+        getConfig: function (custom) {
+            var config = {};
+            custom = custom || {};
+            var defaults = sinon.defaultConfig;
+
+            for (var prop in defaults) {
+                if (defaults.hasOwnProperty(prop)) {
+                    config[prop] = custom.hasOwnProperty(prop) ? custom[prop] : defaults[prop];
+                }
+            }
+
+            return config;
+        },
+
+        format: function (val) {
+            return "" + val;
+        },
+
+        defaultConfig: {
+            injectIntoThis: true,
+            injectInto: null,
+            properties: ["spy", "stub", "mock", "clock", "server", "requests"],
+            useFakeTimers: true,
+            useFakeServer: true
+        },
+
+        timesInWords: function timesInWords(count) {
+            return count == 1 && "once" ||
+                count == 2 && "twice" ||
+                count == 3 && "thrice" ||
+                (count || 0) + " times";
+        },
+
+        calledInOrder: function (spies) {
+            for (var i = 1, l = spies.length; i < l; i++) {
+                if (!spies[i - 1].calledBefore(spies[i]) || !spies[i].called) {
+                    return false;
+                }
+            }
+
+            return true;
+        },
+
+        orderByFirstCall: function (spies) {
+            return spies.sort(function (a, b) {
+                // uuid, won't ever be equal
+                var aCall = a.getCall(0);
+                var bCall = b.getCall(0);
+                var aId = aCall && aCall.callId || -1;
+                var bId = bCall && bCall.callId || -1;
+
+                return aId < bId ? -1 : 1;
+            });
+        },
+
+        log: function () {},
+
+        logError: function (label, err) {
+            var msg = label + " threw exception: "
+            sinon.log(msg + "[" + err.name + "] " + err.message);
+            if (err.stack) { sinon.log(err.stack); }
+
+            setTimeout(function () {
+                err.message = msg + err.message;
+                throw err;
+            }, 0);
+        },
+
+        typeOf: function (value) {
+            if (value === null) {
+                return "null";
+            }
+            else if (value === undefined) {
+                return "undefined";
+            }
+            var string = Object.prototype.toString.call(value);
+            return string.substring(8, string.length - 1).toLowerCase();
+        },
+
+        createStubInstance: function (constructor) {
+            if (typeof constructor !== "function") {
+                throw new TypeError("The constructor should be a function.");
+            }
+            return sinon.stub(sinon.create(constructor.prototype));
+        }
+    };
+
+    var isNode = typeof module == "object" && typeof require == "function";
+
+    if (isNode) {
+        try {
+            buster = { format: require("buster-format") };
+        } catch (e) {}
+        module.exports = sinon;
+        module.exports.spy = require("./sinon/spy");
+        module.exports.stub = require("./sinon/stub");
+        module.exports.mock = require("./sinon/mock");
+        module.exports.collection = require("./sinon/collection");
+        module.exports.assert = require("./sinon/assert");
+        module.exports.sandbox = require("./sinon/sandbox");
+        module.exports.test = require("./sinon/test");
+        module.exports.testCase = require("./sinon/test_case");
+        module.exports.assert = require("./sinon/assert");
+        module.exports.match = require("./sinon/match");
+    }
+
+    if (buster) {
+        var formatter = sinon.create(buster.format);
+        formatter.quoteStrings = false;
+        sinon.format = function () {
+            return formatter.ascii.apply(formatter, arguments);
+        };
+    } else if (isNode) {
+        try {
+            var util = require("util");
+            sinon.format = function (value) {
+                return typeof value == "object" && value.toString === Object.prototype.toString ? util.inspect(value) : value;
+            };
+        } catch (e) {
+            /* Node, but no util module - would be very old, but better safe than
+             sorry */
+        }
+    }
+
+    return sinon;
+}(typeof buster == "object" && buster));
+
+})()
+},{"util":15,"./sinon/spy":21,"./sinon/stub":22,"./sinon/mock":23,"./sinon/collection":24,"./sinon/assert":25,"./sinon/sandbox":26,"./sinon/test":27,"./sinon/test_case":28,"./sinon/match":29,"buster-format":30}],21:[function(require,module,exports){
 (function(){/**
   * @depend ../sinon.js
   * @depend match.js
@@ -23754,509 +24134,7 @@ SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 }(typeof sinon == "object" && sinon || null));
 
 })()
-},{"../sinon":3}],24:[function(require,module,exports){
-(function(){/**
- * @depend ../sinon.js
- * @depend stub.js
- * @depend mock.js
- */
-/*jslint eqeqeq: false, onevar: false, forin: true*/
-/*global module, require, sinon*/
-/**
- * Collections of stubs, spies and mocks.
- *
- * @author Christian Johansen (christian@cjohansen.no)
- * @license BSD
- *
- * Copyright (c) 2010-2013 Christian Johansen
- */
-"use strict";
-
-(function (sinon) {
-    var commonJSModule = typeof module == "object" && typeof require == "function";
-    var push = [].push;
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-    if (!sinon && commonJSModule) {
-        sinon = require("../sinon");
-    }
-
-    if (!sinon) {
-        return;
-    }
-
-    function getFakes(fakeCollection) {
-        if (!fakeCollection.fakes) {
-            fakeCollection.fakes = [];
-        }
-
-        return fakeCollection.fakes;
-    }
-
-    function each(fakeCollection, method) {
-        var fakes = getFakes(fakeCollection);
-
-        for (var i = 0, l = fakes.length; i < l; i += 1) {
-            if (typeof fakes[i][method] == "function") {
-                fakes[i][method]();
-            }
-        }
-    }
-
-    function compact(fakeCollection) {
-        var fakes = getFakes(fakeCollection);
-        var i = 0;
-        while (i < fakes.length) {
-          fakes.splice(i, 1);
-        }
-    }
-
-    var collection = {
-        verify: function resolve() {
-            each(this, "verify");
-        },
-
-        restore: function restore() {
-            each(this, "restore");
-            compact(this);
-        },
-
-        verifyAndRestore: function verifyAndRestore() {
-            var exception;
-
-            try {
-                this.verify();
-            } catch (e) {
-                exception = e;
-            }
-
-            this.restore();
-
-            if (exception) {
-                throw exception;
-            }
-        },
-
-        add: function add(fake) {
-            push.call(getFakes(this), fake);
-            return fake;
-        },
-
-        spy: function spy() {
-            return this.add(sinon.spy.apply(sinon, arguments));
-        },
-
-        stub: function stub(object, property, value) {
-            if (property) {
-                var original = object[property];
-
-                if (typeof original != "function") {
-                    if (!hasOwnProperty.call(object, property)) {
-                        throw new TypeError("Cannot stub non-existent own property " + property);
-                    }
-
-                    object[property] = value;
-
-                    return this.add({
-                        restore: function () {
-                            object[property] = original;
-                        }
-                    });
-                }
-            }
-            if (!property && !!object && typeof object == "object") {
-                var stubbedObj = sinon.stub.apply(sinon, arguments);
-
-                for (var prop in stubbedObj) {
-                    if (typeof stubbedObj[prop] === "function") {
-                        this.add(stubbedObj[prop]);
-                    }
-                }
-
-                return stubbedObj;
-            }
-
-            return this.add(sinon.stub.apply(sinon, arguments));
-        },
-
-        mock: function mock() {
-            return this.add(sinon.mock.apply(sinon, arguments));
-        },
-
-        inject: function inject(obj) {
-            var col = this;
-
-            obj.spy = function () {
-                return col.spy.apply(col, arguments);
-            };
-
-            obj.stub = function () {
-                return col.stub.apply(col, arguments);
-            };
-
-            obj.mock = function () {
-                return col.mock.apply(col, arguments);
-            };
-
-            return obj;
-        }
-    };
-
-    if (commonJSModule) {
-        module.exports = collection;
-    } else {
-        sinon.collection = collection;
-    }
-}(typeof sinon == "object" && sinon || null));
-
-})()
-},{"../sinon":3}],3:[function(require,module,exports){
-(function(){/*jslint eqeqeq: false, onevar: false, forin: true, nomen: false, regexp: false, plusplus: false*/
-/*global module, require, __dirname, document*/
-/**
- * Sinon core utilities. For internal use only.
- *
- * @author Christian Johansen (christian@cjohansen.no)
- * @license BSD
- *
- * Copyright (c) 2010-2013 Christian Johansen
- */
-"use strict";
-
-var sinon = (function (buster) {
-    var div = typeof document != "undefined" && document.createElement("div");
-    var hasOwn = Object.prototype.hasOwnProperty;
-
-    function isDOMNode(obj) {
-        var success = false;
-
-        try {
-            obj.appendChild(div);
-            success = div.parentNode == obj;
-        } catch (e) {
-            return false;
-        } finally {
-            try {
-                obj.removeChild(div);
-            } catch (e) {
-                // Remove failed, not much we can do about that
-            }
-        }
-
-        return success;
-    }
-
-    function isElement(obj) {
-        return div && obj && obj.nodeType === 1 && isDOMNode(obj);
-    }
-
-    function isFunction(obj) {
-        return typeof obj === "function" || !!(obj && obj.constructor && obj.call && obj.apply);
-    }
-
-    function mirrorProperties(target, source) {
-        for (var prop in source) {
-            if (!hasOwn.call(target, prop)) {
-                target[prop] = source[prop];
-            }
-        }
-    }
-
-    var sinon = {
-        wrapMethod: function wrapMethod(object, property, method) {
-            if (!object) {
-                throw new TypeError("Should wrap property of object");
-            }
-
-            if (typeof method != "function") {
-                throw new TypeError("Method wrapper should be function");
-            }
-
-            var wrappedMethod = object[property];
-
-            if (!isFunction(wrappedMethod)) {
-                throw new TypeError("Attempted to wrap " + (typeof wrappedMethod) + " property " +
-                                    property + " as function");
-            }
-
-            if (wrappedMethod.restore && wrappedMethod.restore.sinon) {
-                throw new TypeError("Attempted to wrap " + property + " which is already wrapped");
-            }
-
-            if (wrappedMethod.calledBefore) {
-                var verb = !!wrappedMethod.returns ? "stubbed" : "spied on";
-                throw new TypeError("Attempted to wrap " + property + " which is already " + verb);
-            }
-
-            // IE 8 does not support hasOwnProperty on the window object.
-            var owned = hasOwn.call(object, property);
-            object[property] = method;
-            method.displayName = property;
-
-            method.restore = function () {
-                // For prototype properties try to reset by delete first.
-                // If this fails (ex: localStorage on mobile safari) then force a reset
-                // via direct assignment.
-                if (!owned) {
-                    delete object[property];
-                }
-                if (object[property] === method) {
-                    object[property] = wrappedMethod;
-                }
-            };
-
-            method.restore.sinon = true;
-            mirrorProperties(method, wrappedMethod);
-
-            return method;
-        },
-
-        extend: function extend(target) {
-            for (var i = 1, l = arguments.length; i < l; i += 1) {
-                for (var prop in arguments[i]) {
-                    if (arguments[i].hasOwnProperty(prop)) {
-                        target[prop] = arguments[i][prop];
-                    }
-
-                    // DONT ENUM bug, only care about toString
-                    if (arguments[i].hasOwnProperty("toString") &&
-                        arguments[i].toString != target.toString) {
-                        target.toString = arguments[i].toString;
-                    }
-                }
-            }
-
-            return target;
-        },
-
-        create: function create(proto) {
-            var F = function () {};
-            F.prototype = proto;
-            return new F();
-        },
-
-        deepEqual: function deepEqual(a, b) {
-            if (sinon.match && sinon.match.isMatcher(a)) {
-                return a.test(b);
-            }
-            if (typeof a != "object" || typeof b != "object") {
-                return a === b;
-            }
-
-            if (isElement(a) || isElement(b)) {
-                return a === b;
-            }
-
-            if (a === b) {
-                return true;
-            }
-
-            if ((a === null && b !== null) || (a !== null && b === null)) {
-                return false;
-            }
-
-            var aString = Object.prototype.toString.call(a);
-            if (aString != Object.prototype.toString.call(b)) {
-                return false;
-            }
-
-            if (aString == "[object Array]") {
-                if (a.length !== b.length) {
-                    return false;
-                }
-
-                for (var i = 0, l = a.length; i < l; i += 1) {
-                    if (!deepEqual(a[i], b[i])) {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            var prop, aLength = 0, bLength = 0;
-
-            for (prop in a) {
-                aLength += 1;
-
-                if (!deepEqual(a[prop], b[prop])) {
-                    return false;
-                }
-            }
-
-            for (prop in b) {
-                bLength += 1;
-            }
-
-            if (aLength != bLength) {
-                return false;
-            }
-
-            return true;
-        },
-
-        functionName: function functionName(func) {
-            var name = func.displayName || func.name;
-
-            // Use function decomposition as a last resort to get function
-            // name. Does not rely on function decomposition to work - if it
-            // doesn't debugging will be slightly less informative
-            // (i.e. toString will say 'spy' rather than 'myFunc').
-            if (!name) {
-                var matches = func.toString().match(/function ([^\s\(]+)/);
-                name = matches && matches[1];
-            }
-
-            return name;
-        },
-
-        functionToString: function toString() {
-            if (this.getCall && this.callCount) {
-                var thisValue, prop, i = this.callCount;
-
-                while (i--) {
-                    thisValue = this.getCall(i).thisValue;
-
-                    for (prop in thisValue) {
-                        if (thisValue[prop] === this) {
-                            return prop;
-                        }
-                    }
-                }
-            }
-
-            return this.displayName || "sinon fake";
-        },
-
-        getConfig: function (custom) {
-            var config = {};
-            custom = custom || {};
-            var defaults = sinon.defaultConfig;
-
-            for (var prop in defaults) {
-                if (defaults.hasOwnProperty(prop)) {
-                    config[prop] = custom.hasOwnProperty(prop) ? custom[prop] : defaults[prop];
-                }
-            }
-
-            return config;
-        },
-
-        format: function (val) {
-            return "" + val;
-        },
-
-        defaultConfig: {
-            injectIntoThis: true,
-            injectInto: null,
-            properties: ["spy", "stub", "mock", "clock", "server", "requests"],
-            useFakeTimers: true,
-            useFakeServer: true
-        },
-
-        timesInWords: function timesInWords(count) {
-            return count == 1 && "once" ||
-                count == 2 && "twice" ||
-                count == 3 && "thrice" ||
-                (count || 0) + " times";
-        },
-
-        calledInOrder: function (spies) {
-            for (var i = 1, l = spies.length; i < l; i++) {
-                if (!spies[i - 1].calledBefore(spies[i]) || !spies[i].called) {
-                    return false;
-                }
-            }
-
-            return true;
-        },
-
-        orderByFirstCall: function (spies) {
-            return spies.sort(function (a, b) {
-                // uuid, won't ever be equal
-                var aCall = a.getCall(0);
-                var bCall = b.getCall(0);
-                var aId = aCall && aCall.callId || -1;
-                var bId = bCall && bCall.callId || -1;
-
-                return aId < bId ? -1 : 1;
-            });
-        },
-
-        log: function () {},
-
-        logError: function (label, err) {
-            var msg = label + " threw exception: "
-            sinon.log(msg + "[" + err.name + "] " + err.message);
-            if (err.stack) { sinon.log(err.stack); }
-
-            setTimeout(function () {
-                err.message = msg + err.message;
-                throw err;
-            }, 0);
-        },
-
-        typeOf: function (value) {
-            if (value === null) {
-                return "null";
-            }
-            else if (value === undefined) {
-                return "undefined";
-            }
-            var string = Object.prototype.toString.call(value);
-            return string.substring(8, string.length - 1).toLowerCase();
-        },
-
-        createStubInstance: function (constructor) {
-            if (typeof constructor !== "function") {
-                throw new TypeError("The constructor should be a function.");
-            }
-            return sinon.stub(sinon.create(constructor.prototype));
-        }
-    };
-
-    var isNode = typeof module == "object" && typeof require == "function";
-
-    if (isNode) {
-        try {
-            buster = { format: require("buster-format") };
-        } catch (e) {}
-        module.exports = sinon;
-        module.exports.spy = require("./sinon/spy");
-        module.exports.stub = require("./sinon/stub");
-        module.exports.mock = require("./sinon/mock");
-        module.exports.collection = require("./sinon/collection");
-        module.exports.assert = require("./sinon/assert");
-        module.exports.sandbox = require("./sinon/sandbox");
-        module.exports.test = require("./sinon/test");
-        module.exports.testCase = require("./sinon/test_case");
-        module.exports.assert = require("./sinon/assert");
-        module.exports.match = require("./sinon/match");
-    }
-
-    if (buster) {
-        var formatter = sinon.create(buster.format);
-        formatter.quoteStrings = false;
-        sinon.format = function () {
-            return formatter.ascii.apply(formatter, arguments);
-        };
-    } else if (isNode) {
-        try {
-            var util = require("util");
-            sinon.format = function (value) {
-                return typeof value == "object" && value.toString === Object.prototype.toString ? util.inspect(value) : value;
-            };
-        } catch (e) {
-            /* Node, but no util module - would be very old, but better safe than
-             sorry */
-        }
-    }
-
-    return sinon;
-}(typeof buster == "object" && buster));
-
-})()
-},{"util":15,"./sinon/spy":21,"./sinon/stub":22,"./sinon/mock":23,"./sinon/collection":24,"./sinon/assert":25,"./sinon/sandbox":26,"./sinon/test":27,"./sinon/test_case":28,"./sinon/match":29,"buster-format":30}],25:[function(require,module,exports){
+},{"../sinon":3}],25:[function(require,module,exports){
 (function(global){/**
  * @depend ../sinon.js
  * @depend stub.js
@@ -24435,17 +24313,16 @@ var sinon = (function (buster) {
 }(typeof sinon == "object" && sinon || null, typeof window != "undefined" ? window : global));
 
 })(window)
-},{"../sinon":3}],27:[function(require,module,exports){
+},{"../sinon":3}],24:[function(require,module,exports){
 (function(){/**
  * @depend ../sinon.js
  * @depend stub.js
  * @depend mock.js
- * @depend sandbox.js
  */
-/*jslint eqeqeq: false, onevar: false, forin: true, plusplus: false*/
+/*jslint eqeqeq: false, onevar: false, forin: true*/
 /*global module, require, sinon*/
 /**
- * Test function, sandboxes fakes
+ * Collections of stubs, spies and mocks.
  *
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -24456,6 +24333,8 @@ var sinon = (function (buster) {
 
 (function (sinon) {
     var commonJSModule = typeof module == "object" && typeof require == "function";
+    var push = [].push;
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
 
     if (!sinon && commonJSModule) {
         sinon = require("../sinon");
@@ -24465,50 +24344,127 @@ var sinon = (function (buster) {
         return;
     }
 
-    function test(callback) {
-        var type = typeof callback;
-
-        if (type != "function") {
-            throw new TypeError("sinon.test needs to wrap a test function, got " + type);
+    function getFakes(fakeCollection) {
+        if (!fakeCollection.fakes) {
+            fakeCollection.fakes = [];
         }
 
-        return function () {
-            var config = sinon.getConfig(sinon.config);
-            config.injectInto = config.injectIntoThis && this || config.injectInto;
-            var sandbox = sinon.sandbox.create(config);
-            var exception, result;
-            var args = Array.prototype.slice.call(arguments).concat(sandbox.args);
+        return fakeCollection.fakes;
+    }
+
+    function each(fakeCollection, method) {
+        var fakes = getFakes(fakeCollection);
+
+        for (var i = 0, l = fakes.length; i < l; i += 1) {
+            if (typeof fakes[i][method] == "function") {
+                fakes[i][method]();
+            }
+        }
+    }
+
+    function compact(fakeCollection) {
+        var fakes = getFakes(fakeCollection);
+        var i = 0;
+        while (i < fakes.length) {
+          fakes.splice(i, 1);
+        }
+    }
+
+    var collection = {
+        verify: function resolve() {
+            each(this, "verify");
+        },
+
+        restore: function restore() {
+            each(this, "restore");
+            compact(this);
+        },
+
+        verifyAndRestore: function verifyAndRestore() {
+            var exception;
 
             try {
-                result = callback.apply(this, args);
+                this.verify();
             } catch (e) {
                 exception = e;
             }
 
-            if (typeof exception !== "undefined") {
-                sandbox.restore();
+            this.restore();
+
+            if (exception) {
                 throw exception;
             }
-            else {
-                sandbox.verifyAndRestore();
+        },
+
+        add: function add(fake) {
+            push.call(getFakes(this), fake);
+            return fake;
+        },
+
+        spy: function spy() {
+            return this.add(sinon.spy.apply(sinon, arguments));
+        },
+
+        stub: function stub(object, property, value) {
+            if (property) {
+                var original = object[property];
+
+                if (typeof original != "function") {
+                    if (!hasOwnProperty.call(object, property)) {
+                        throw new TypeError("Cannot stub non-existent own property " + property);
+                    }
+
+                    object[property] = value;
+
+                    return this.add({
+                        restore: function () {
+                            object[property] = original;
+                        }
+                    });
+                }
+            }
+            if (!property && !!object && typeof object == "object") {
+                var stubbedObj = sinon.stub.apply(sinon, arguments);
+
+                for (var prop in stubbedObj) {
+                    if (typeof stubbedObj[prop] === "function") {
+                        this.add(stubbedObj[prop]);
+                    }
+                }
+
+                return stubbedObj;
             }
 
-            return result;
-        };
-    }
+            return this.add(sinon.stub.apply(sinon, arguments));
+        },
 
-    test.config = {
-        injectIntoThis: true,
-        injectInto: null,
-        properties: ["spy", "stub", "mock", "clock", "server", "requests"],
-        useFakeTimers: true,
-        useFakeServer: true
+        mock: function mock() {
+            return this.add(sinon.mock.apply(sinon, arguments));
+        },
+
+        inject: function inject(obj) {
+            var col = this;
+
+            obj.spy = function () {
+                return col.spy.apply(col, arguments);
+            };
+
+            obj.stub = function () {
+                return col.stub.apply(col, arguments);
+            };
+
+            obj.mock = function () {
+                return col.mock.apply(col, arguments);
+            };
+
+            return obj;
+        }
     };
 
     if (commonJSModule) {
-        module.exports = test;
+        module.exports = collection;
     } else {
-        sinon.test = test;
+        sinon.collection = collection;
     }
 }(typeof sinon == "object" && sinon || null));
 
@@ -24641,7 +24597,85 @@ if (typeof module == "object" && typeof require == "function") {
 }());
 
 })()
-},{"../sinon":3,"./util/fake_timers":31}],28:[function(require,module,exports){
+},{"../sinon":3,"./util/fake_timers":31}],27:[function(require,module,exports){
+(function(){/**
+ * @depend ../sinon.js
+ * @depend stub.js
+ * @depend mock.js
+ * @depend sandbox.js
+ */
+/*jslint eqeqeq: false, onevar: false, forin: true, plusplus: false*/
+/*global module, require, sinon*/
+/**
+ * Test function, sandboxes fakes
+ *
+ * @author Christian Johansen (christian@cjohansen.no)
+ * @license BSD
+ *
+ * Copyright (c) 2010-2013 Christian Johansen
+ */
+"use strict";
+
+(function (sinon) {
+    var commonJSModule = typeof module == "object" && typeof require == "function";
+
+    if (!sinon && commonJSModule) {
+        sinon = require("../sinon");
+    }
+
+    if (!sinon) {
+        return;
+    }
+
+    function test(callback) {
+        var type = typeof callback;
+
+        if (type != "function") {
+            throw new TypeError("sinon.test needs to wrap a test function, got " + type);
+        }
+
+        return function () {
+            var config = sinon.getConfig(sinon.config);
+            config.injectInto = config.injectIntoThis && this || config.injectInto;
+            var sandbox = sinon.sandbox.create(config);
+            var exception, result;
+            var args = Array.prototype.slice.call(arguments).concat(sandbox.args);
+
+            try {
+                result = callback.apply(this, args);
+            } catch (e) {
+                exception = e;
+            }
+
+            if (typeof exception !== "undefined") {
+                sandbox.restore();
+                throw exception;
+            }
+            else {
+                sandbox.verifyAndRestore();
+            }
+
+            return result;
+        };
+    }
+
+    test.config = {
+        injectIntoThis: true,
+        injectInto: null,
+        properties: ["spy", "stub", "mock", "clock", "server", "requests"],
+        useFakeTimers: true,
+        useFakeServer: true
+    };
+
+    if (commonJSModule) {
+        module.exports = test;
+    } else {
+        sinon.test = test;
+    }
+}(typeof sinon == "object" && sinon || null));
+
+})()
+},{"../sinon":3}],28:[function(require,module,exports){
 (function(){/**
  * @depend ../sinon.js
  * @depend test.js
@@ -27629,7 +27663,7 @@ exports.randomBytes = function(size, callback) {
   }
 })
 
-},{"./sha":39,"./md5":40,"./rng":41}],31:[function(require,module,exports){
+},{"./sha":39,"./rng":40,"./md5":41}],31:[function(require,module,exports){
 (function(global){/*jslint eqeqeq: false, plusplus: false, evil: true, onevar: false, browser: true, forin: false*/
 /*global module, require, window*/
 /**
@@ -28196,6 +28230,44 @@ function binb2b64(binarray)
 
 
 },{}],40:[function(require,module,exports){
+// Original code adapted from Robert Kieffer.
+// details at https://github.com/broofa/node-uuid
+(function() {
+  var _global = this;
+
+  var mathRNG, whatwgRNG;
+
+  // NOTE: Math.random() does not guarantee "cryptographic quality"
+  mathRNG = function(size) {
+    var bytes = new Array(size);
+    var r;
+
+    for (var i = 0, r; i < size; i++) {
+      if ((i & 0x03) == 0) r = Math.random() * 0x100000000;
+      bytes[i] = r >>> ((i & 0x03) << 3) & 0xff;
+    }
+
+    return bytes;
+  }
+
+  // currently only available in webkit-based browsers.
+  if (_global.crypto && crypto.getRandomValues) {
+    var _rnds = new Uint32Array(4);
+    whatwgRNG = function(size) {
+      var bytes = new Array(size);
+      crypto.getRandomValues(_rnds);
+
+      for (var c = 0 ; c < size; c++) {
+        bytes[c] = _rnds[c >> 2] >>> ((c & 0x03) * 8) & 0xff;
+      }
+      return bytes;
+    }
+  }
+
+  module.exports = whatwgRNG || mathRNG;
+
+}())
+},{}],41:[function(require,module,exports){
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -28581,44 +28653,6 @@ exports.hex_md5 = hex_md5;
 exports.b64_md5 = b64_md5;
 exports.any_md5 = any_md5;
 
-},{}],41:[function(require,module,exports){
-// Original code adapted from Robert Kieffer.
-// details at https://github.com/broofa/node-uuid
-(function() {
-  var _global = this;
-
-  var mathRNG, whatwgRNG;
-
-  // NOTE: Math.random() does not guarantee "cryptographic quality"
-  mathRNG = function(size) {
-    var bytes = new Array(size);
-    var r;
-
-    for (var i = 0, r; i < size; i++) {
-      if ((i & 0x03) == 0) r = Math.random() * 0x100000000;
-      bytes[i] = r >>> ((i & 0x03) << 3) & 0xff;
-    }
-
-    return bytes;
-  }
-
-  // currently only available in webkit-based browsers.
-  if (_global.crypto && crypto.getRandomValues) {
-    var _rnds = new Uint32Array(4);
-    whatwgRNG = function(size) {
-      var bytes = new Array(size);
-      crypto.getRandomValues(_rnds);
-
-      for (var c = 0 ; c < size; c++) {
-        bytes[c] = _rnds[c >> 2] >>> ((c & 0x03) * 8) & 0xff;
-      }
-      return bytes;
-    }
-  }
-
-  module.exports = whatwgRNG || mathRNG;
-
-}())
 },{}],32:[function(require,module,exports){
 /*!
  * chai
@@ -28931,6 +28965,40 @@ module.exports = function (obj, args) {
   return 'undefined' !== typeof actual ? actual : obj._obj;
 };
 
+},{}],48:[function(require,module,exports){
+/*!
+ * Chai - flag utility
+ * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+/**
+ * ### flag(object ,key, [value])
+ *
+ * Get or set a flag value on an object. If a
+ * value is provided it will be set, else it will
+ * return the currently set value or `undefined` if
+ * the value is not set.
+ *
+ *     utils.flag(this, 'foo', 'bar'); // setter
+ *     utils.flag(this, 'foo'); // getter, returns `bar`
+ *
+ * @param {Object} object (constructed Assertion
+ * @param {String} key
+ * @param {Mixed} value (optional)
+ * @name flag
+ * @api private
+ */
+
+module.exports = function (obj, key, value) {
+  var flags = obj.__flags || (obj.__flags = Object.create(null));
+  if (arguments.length === 3) {
+    flags[key] = value;
+  } else {
+    return flags[key];
+  }
+};
+
 },{}],49:[function(require,module,exports){
 /*!
  * Chai - transferFlags utility
@@ -28974,40 +29042,6 @@ module.exports = function (assertion, object, includeAll) {
         (flag !== 'object' && flag !== 'ssfi' && flag != 'message')) {
       object.__flags[flag] = flags[flag];
     }
-  }
-};
-
-},{}],48:[function(require,module,exports){
-/*!
- * Chai - flag utility
- * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
-
-/**
- * ### flag(object ,key, [value])
- *
- * Get or set a flag value on an object. If a
- * value is provided it will be set, else it will
- * return the currently set value or `undefined` if
- * the value is not set.
- *
- *     utils.flag(this, 'foo', 'bar'); // setter
- *     utils.flag(this, 'foo'); // getter, returns `bar`
- *
- * @param {Object} object (constructed Assertion
- * @param {String} key
- * @param {Mixed} value (optional)
- * @name flag
- * @api private
- */
-
-module.exports = function (obj, key, value) {
-  var flags = obj.__flags || (obj.__flags = Object.create(null));
-  if (arguments.length === 3) {
-    flags[key] = value;
-  } else {
-    return flags[key];
   }
 };
 
@@ -29874,58 +29908,7 @@ module.exports = function (obj, args) {
   return negate ? !expr : expr;
 };
 
-},{"./flag":48}],44:[function(require,module,exports){
-/*!
- * Chai - message composition utility
- * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
-
-/*!
- * Module dependancies
- */
-
-var flag = require('./flag')
-  , getActual = require('./getActual')
-  , inspect = require('./inspect')
-  , objDisplay = require('./objDisplay');
-
-/**
- * ### .getMessage(object, message, negateMessage)
- *
- * Construct the error message based on flags
- * and template tags. Template tags will return
- * a stringified inspection of the object referenced.
- *
- * Messsage template tags:
- * - `#{this}` current asserted object
- * - `#{act}` actual value
- * - `#{exp}` expected value
- *
- * @param {Object} object (constructed Assertion)
- * @param {Arguments} chai.Assertion.prototype.assert arguments
- * @name getMessage
- * @api public
- */
-
-module.exports = function (obj, args) {
-  var negate = flag(obj, 'negate')
-    , val = flag(obj, 'object')
-    , expected = args[3]
-    , actual = getActual(obj, args)
-    , msg = negate ? args[2] : args[1]
-    , flagMsg = flag(obj, 'message');
-
-  msg = msg || '';
-  msg = msg
-    .replace(/#{this}/g, objDisplay(val))
-    .replace(/#{act}/g, objDisplay(actual))
-    .replace(/#{exp}/g, objDisplay(expected));
-
-  return flagMsg ? flagMsg + ': ' + msg : msg;
-};
-
-},{"./getActual":45,"./flag":48,"./inspect":46,"./objDisplay":47}],46:[function(require,module,exports){
+},{"./flag":48}],46:[function(require,module,exports){
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
@@ -30243,57 +30226,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
-},{"./getName":52,"./getProperties":61,"./getEnumerableProperties":62}],47:[function(require,module,exports){
-/*!
- * Chai - flag utility
- * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
-
-/*!
- * Module dependancies
- */
-
-var inspect = require('./inspect');
-
-/**
- * ### .objDisplay (object)
- *
- * Determines if an object or an array matches
- * criteria to be inspected in-line for error
- * messages or should be truncated.
- *
- * @param {Mixed} javascript object to inspect
- * @name objDisplay
- * @api public
- */
-
-module.exports = function (obj) {
-  var str = inspect(obj)
-    , type = Object.prototype.toString.call(obj);
-
-  if (str.length >= 40) {
-    if (type === '[object Function]') {
-      return !obj.name || obj.name === ''
-        ? '[Function]'
-        : '[Function: ' + obj.name + ']';
-    } else if (type === '[object Array]') {
-      return '[ Array(' + obj.length + ') ]';
-    } else if (type === '[object Object]') {
-      var keys = Object.keys(obj)
-        , kstr = keys.length > 2
-          ? keys.splice(0, 2).join(', ') + ', ...'
-          : keys.join(', ');
-      return '{ Object (' + kstr + ') }';
-    } else {
-      return str;
-    }
-  } else {
-    return str;
-  }
-};
-
-},{"./inspect":46}],50:[function(require,module,exports){
+},{"./getName":52,"./getProperties":61,"./getEnumerableProperties":62}],50:[function(require,module,exports){
 (function(){// This is (almost) directly from Node.js assert
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/assert.js
 
@@ -30420,7 +30353,108 @@ function objEquiv(a, b, memos) {
 }
 
 })()
-},{"buffer":60,"./getEnumerableProperties":62}],57:[function(require,module,exports){
+},{"buffer":60,"./getEnumerableProperties":62}],44:[function(require,module,exports){
+/*!
+ * Chai - message composition utility
+ * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+/*!
+ * Module dependancies
+ */
+
+var flag = require('./flag')
+  , getActual = require('./getActual')
+  , inspect = require('./inspect')
+  , objDisplay = require('./objDisplay');
+
+/**
+ * ### .getMessage(object, message, negateMessage)
+ *
+ * Construct the error message based on flags
+ * and template tags. Template tags will return
+ * a stringified inspection of the object referenced.
+ *
+ * Messsage template tags:
+ * - `#{this}` current asserted object
+ * - `#{act}` actual value
+ * - `#{exp}` expected value
+ *
+ * @param {Object} object (constructed Assertion)
+ * @param {Arguments} chai.Assertion.prototype.assert arguments
+ * @name getMessage
+ * @api public
+ */
+
+module.exports = function (obj, args) {
+  var negate = flag(obj, 'negate')
+    , val = flag(obj, 'object')
+    , expected = args[3]
+    , actual = getActual(obj, args)
+    , msg = negate ? args[2] : args[1]
+    , flagMsg = flag(obj, 'message');
+
+  msg = msg || '';
+  msg = msg
+    .replace(/#{this}/g, objDisplay(val))
+    .replace(/#{act}/g, objDisplay(actual))
+    .replace(/#{exp}/g, objDisplay(expected));
+
+  return flagMsg ? flagMsg + ': ' + msg : msg;
+};
+
+},{"./inspect":46,"./objDisplay":47,"./flag":48,"./getActual":45}],47:[function(require,module,exports){
+/*!
+ * Chai - flag utility
+ * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+/*!
+ * Module dependancies
+ */
+
+var inspect = require('./inspect');
+
+/**
+ * ### .objDisplay (object)
+ *
+ * Determines if an object or an array matches
+ * criteria to be inspected in-line for error
+ * messages or should be truncated.
+ *
+ * @param {Mixed} javascript object to inspect
+ * @name objDisplay
+ * @api public
+ */
+
+module.exports = function (obj) {
+  var str = inspect(obj)
+    , type = Object.prototype.toString.call(obj);
+
+  if (str.length >= 40) {
+    if (type === '[object Function]') {
+      return !obj.name || obj.name === ''
+        ? '[Function]'
+        : '[Function: ' + obj.name + ']';
+    } else if (type === '[object Array]') {
+      return '[ Array(' + obj.length + ') ]';
+    } else if (type === '[object Object]') {
+      var keys = Object.keys(obj)
+        , kstr = keys.length > 2
+          ? keys.splice(0, 2).join(', ') + ', ...'
+          : keys.join(', ');
+      return '{ Object (' + kstr + ') }';
+    } else {
+      return str;
+    }
+  } else {
+    return str;
+  }
+};
+
+},{"./inspect":46}],57:[function(require,module,exports){
 /*!
  * Chai - addChainingMethod utility
  * Copyright(c) 2012-2013 Jake Luer <jake@alogicalparadox.com>
@@ -32652,5 +32686,5 @@ if (typeof module != "undefined") {
 }
 
 })()
-},{"./buster-core":58}]},{},[1,12,7])
+},{"./buster-core":58}]},{},[1,10,12])
 ;

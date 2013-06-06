@@ -10,6 +10,20 @@ var base = {
   getPathAndFilenameFromFilename: function(filename){
     var splitFilename = filename.split('/');
     return [_.rest(_.initial(splitFilename)), _.last(splitFilename)];
+  },
+  createDirectoryFromPath: function(filesystem){
+    return function(filepath){
+      var deferred, promise, createRecursiveDirectory;
+      deferred = when.defer();
+      promise = deferred.promise;
+      createRecursiveDirectory = function(remainingSegments){
+        var directoryDeferred, directoryPromise, directorySuccess, directoryFailure;
+        directoryDeferred = when.defer();
+        directoryPromise = directoryDeferred.promise;
+        
+      };
+      return promise;
+    };
   }
 };
 if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
@@ -72,18 +86,6 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
         return promise;
       },
       Nothing: {},
-      // getPathAndFilenameFromFilename: function(filename) {
-      //   var filepathAndFilename, filepath, file;
-      //   if(filename.indexOf('/') !== -1) {
-      //     filepathAndFilename = filename.split('/');
-      //     filepath = _.split(filepathAndFilename);
-      //     file = _.last(filepathAndFilename);
-      //   } else {
-      //     filepath = '/';
-      //     file = filename;
-      //   }
-      //   return [filepath, file];
-      // },
       // // this returns an either, which is a function with a left
       // // containing an Error of some type, or right, which contains
       // // a value. Lefts and Rights are themselves Eithers, which
