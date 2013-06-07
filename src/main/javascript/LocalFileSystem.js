@@ -79,6 +79,7 @@ function getFileEntry (filesystem) {
     };
   };
 }
+
 var base = {
   getPathAndFilenameFromFilename: getPathAndFilenameFromFilename,
   createDirectoryFromPath: createDirectoryFromPath,

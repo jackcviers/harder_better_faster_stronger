@@ -16,180 +16,114 @@ module.exports = {
       deferred = when.defer();
       promise = deferred.promise;
       if(
-        (typeof model === 'undefined' || model === null) || (typeof model.collection === 'undefined' || model.collection === null) || (typeof model.collection.filesystem === 'undefined' || model.collection.filesystem === null)
+        (typeof model === 'undefined' || model === null) || 
+          (typeof model.collection === 'undefined' || model.collection === null) || 
+          (typeof model.collection.filesystem === 'undefined' || 
+           model.collection.filesystem === null)
       ) {
         deferred.reject(new TypeError('Your model must belong to a collection of files, and that collection must have a filesystem instance.'));
       } else {
         fs = model.collection.filesystem;
       }
-      methodMap = {
-        'create': function(model, options) {
-          var getPromisedFile, getPromisedFileWriter, deferred, promise, promiseOfFile, getPromiseOfWriteSuccess;
-          // The file writer api is a big
-          // cps api. To unmangle all the 
-          // nested callbacks, we'll lift
-          // each step into a promise so we
-          // can handle each step atomically.
-          // the whole deferred will fail if
-          // any one step fails, ad this way
-          // each step need not know about
-          // the next step in the process.
-          getPromisedFile = function() {
-            var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
-            model.id = uuid.v4();
-            getFileDeferred = when.defer();
-            getFilePromise = deferred.promise;
-            getFileSuccess = (function(that) {
-              return function(fileEntry) {
-                getFileDeferred.resolve(fileEntry);
-              };
-            }(this));
-            getFileFailure = (function(that){
-              return function (error) {
-                getFileDeferred.reject(error);
-              };
-            }(this));
-            fs.root.getFile(model.collection.path + '/' + model.id + model.extension, {create: true, exclusive: true}, getFileSuccess, getFileFailure );
-            return getFilePromise;
-          };
-          
-          getPromisedFileWriter = function(fileEntry) {
-            var getFileWriterDeferred, getFileWriterPromise, getFileWriterSuccess, getFileWriterFailure;
-            getFileWriterDeferred = when.defer();
-            getFileWriterPromise = getFileWriterDeferred.promise;
-            getFileWriterSuccess = function(fileWriter) {
-              getFileWriterDeferred.resolve(fileWriter);
-            };
-            getFileWriterFailure = function(error) {
-              getFileWriterDeferred.reject(error);
-            };
-            fileEntry.createWriter(getFileWriterSuccess, getFileWriterFailure);
-            return getFileWriterPromise;
-          };
-          getPromiseOfWriteSuccess = function(fileWriter) {
-            var writeSuccessDeferred, writeSuccessPromise, writeSuccess, writeFailure, writeProgress;
-            writeSuccessDeferred = when.defer();
-            writeSuccessPromise = writeSuccessDeferred.promise;
-            writeSuccess = function(event) {
-              writeSuccessDeferred.resolve(event);
-            };
-            writeFailure = function(error) {
-              writeSuccessDeferred.reject(error);
-            };
-            writeProgress = function(event) {
-              writeSuccessDeferred.notify(event);
-            };
-            fileWriter.onWriteEnd = writeSuccess;
-            fileWriter.onprogress = writeProgress;
-            fileWriter.onerror = writeFailure;
-            var blob = new Blob(model.serialize(), model.get('mime/type'));
-            fileWriter.write(blob);
-            return writeSuccessPromise;
-          };
-
-          // 1st, get the promised file.
-          promiseOfFile = getPromisedFile();
-          
-          // then get the writer for the filepath
-          promiseOfFile.then(getPromisedFileWriter, function(error) {
-            return deferred.reject(error);
-            // then write the file
-          }).then(getPromiseOfWriteSuccess, function(error) {
-            return deferred.reject(error);
-            // then get the complete event and pass it to the 
-            // listening success handler.
-          }).then(function(writeEvent){
-            deferred.resolve(model, options);
-          }, function(error){
-            deferred.reject(error);
-          }, function(progress) {
-            deferred.notify(progress);
+      var createUpdate = function(model, options) {
+        var deferred, promise;
+        deferred = when.defer();
+        promise = deferred.promise;
+        LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(true).then(function(fileEntry){
+          var entryDeferred, entryPromise;
+          entryDeferred = when.defer();
+          entryPromise = entryDeferred.promise;
+          fileEntry.createWriter(function(writer){
+            entryDeferred.resolve(writer);
+          }, function(err){
+            entryDeferred.reject(err);
           });
-          
-          // all this happens async, so return the promise
-          // so anything else can listen.
-          return promise;
-        },
-        // reading a file is litle different than writing.
-        // We get a file reader instead of a writer.
-        // The key difference is we have a choice of how
-        // to get our data. I chose as array buffer
-        // because we can use the file result while it is being read.
+          return entryPromise;
+        }, function(err){
+          deferred.reject(err);
+        }).then(function(writer){
+          var writerDeferred, writerPromise;
+          writer.onwriteend = function(event) {
+            writerDeferred.resolve(event.target);
+          };
+          writer.onerror = function(err) {
+            writerDeferred.reject(err);
+          };
+          writer.write(new Blob(model.toSerialzed, model.get('mimeType')));
+          return writerPromise;
+        }, function(err){
+          deferred.reject(err);
+        }).then(function(writer){
+          deferred.resolve(writer);
+        }, function(err){
+          deferred.reject(err);
+        });
+        return promise;
+      };
+      methodMap = {
+        'create': createUpdate,
         'read': function(model, options) {
-          var getPromisedFileEntry, getPromisedFile, deferred, promise, promisedFile, getPromisedFileData;
+          var deferred, promise;
           deferred = when.defer();
           promise = deferred.promise;
-          getPromisedFileEntry = function() {
-            var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
-            getFileDeferred = when.defer();
-            getFilePromise = deferred.promise;
-            getFileSuccess = (function(that) {
-              return function(fileEntry) {
-                getFileDeferred.resolve(fileEntry);
-              };
-            }(this));
-            getFileFailure = (function(that){
-              return function (error) {
-                getFileDeferred.reject(error);
-              };
-            }(this));
-            fs.root.getFile(model.collection.path + '/' + model.id + model.extension, {}, getFileSuccess, getFileFailure );
-            return getFilePromise;
-          };
-          getPromisedFile = function(fileEntry) {
-            var getFileDeferred, getFilePromise, getFileSuccess, getFileFailure;
-            getFileDeferred = when.defer();
-            getFilePromise = getFileDeferred.promise;
-            getFileSuccess = function(file) {
-              getFileDeferred.resolve(file);
+          LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
+            var fileDeferred, filePromise;
+            fileDeferred = when.defer();
+            filePromise = fileDeferred.promise;
+            fileEntry.file(function(file){
+              fileDeferred.resolve(file);
+            }, function(err){
+              fileDeferred.reject(err);
+            });
+            return filePromise;
+          }, function(err){}).then(function(file){
+            var reader, readerDeferred, readerPromise;
+            readerDeferred = when.defer();
+            readerPromise = readerDeferred.promise;
+            reader = new FileReader();
+            reader.onloadedend = function(event){
+              readerDeferred.resolve(event);
             };
-            getFileFailure = function(error) {
-              getFileDeferred.reject(error);
+            reader.onprogress = function(event){
+              readerDeferred.notify(event);
             };
-            fileEntry.file(getFileSuccess, getFileFailure);
-            return getFilePromise;
-          };
-          getPromisedFileData = function(file) {
-            var fileDataDeferred, fileDataPromise, fileDataSuccess, fileDataFailure, fileDataProgress, fileReader;
-            fileDataDeferred = when.defer();
-            fileDataPromise = fileDataDeferred.promise;
-            fileDataProgress = function(event) {
-              fileDataDeferred.notify(event);
+            reader.onerror = function(err){
+              readerDeferred.reject(err);
             };
-            fileDataSuccess = function(event) {
-              fileDataDeferred.resolve(event.target.result);
-            };
-            fileDataFailure = function(error) {
-              fileDataDeferred.reject(error);
-            };
-            fileReader = new FileReader();
-            fileReader.onloadedend = fileDataSuccess;
-            fileReader.onprogress = fileDataProgress;
-            fileReader.onerror = fileDataFailure;
-            fileReader.readAsArrayBuffer(file);
-            return fileDataPromise;
-          };
-          promisedFile = getPromisedFileEntry();
-          promisedFile.then(
-            getPromisedFile,
-            function(error){ deferred.reject(error);}
-          ).then(
-            getPromisedFileData,
-            function(error) { deferred.reject(error);}
-          ).then(
-            function(fileResult) { deferred.resolve(fileResult); },
-            function(error) { deferred.reject(error); },
-            function(progress) { deferred.notify(progress);}
-          );
+            reader.readAsArrayBuffer(file);
+            return readerPromise;
+          }, function(err){}).then(function(event){
+            deferred.resolve(event.target);
+          }, function(err){}, function(event){
+            deferred.notify(event.target);
+          });
           return promise;
         },
-        'update': function(model, options) {
-          
-        },
+        'update': createUpdate,
         // again, much the same, except for we probably don't care
         // about progress. At this point we can probably abstract out the read and write functions to avoid duplication
         'delete': function(model, options) {
-          
+          var deferred, promise;
+          deferred = when.defer();
+          promise = deferred.promise;
+          LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
+            var removeDeferred, removePromise;
+            removeDeferred = when.defer();
+            removePromise = removeDeferred.promise;
+            fileEntry.remove(function(){
+              removeDeferred.resolve("Deleted.");
+            }, function(err){
+              removeDeferred.reject(err);
+            });
+            return removePromise;
+          }, function(err){
+            deferred.reject(err);
+          }).then(function(str){
+            deferred.resolve(str);
+          }, function(err){
+            deferred.reject(err);
+          });
+          return promise;
         }
       };
       

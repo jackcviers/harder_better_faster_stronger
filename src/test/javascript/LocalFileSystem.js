@@ -8,16 +8,7 @@ var should = chai.should();
 var _ = require('underscore');
 var LocalFileSystem = require('../../main/javascript/LocalFileSystem.js');
 var when = require('when');
-var testInBrowserOnly = function(context) {
-  return function(testFn) {
-    if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
-      testFn.call(context);
-    } else {
-      return;
-    }
-  };
-}
-
+var testInBrowserOnly = require('./testInBrowserOnly.js');
 describe('LocalFileSystem', function() {
   it('should exist', function(done) {
     expect(LocalFileSystem).to.exist

@@ -16,6 +16,7 @@ Backbone.$ = $
 var File = require('../../main/javascript/Backbone.File.Sync.js');
 Backbone = _.extend(Backbone, File);
 var when = require('when');
+var testInBrowserOnly = require('./testInBrowserOnly.js');
 
 describe('Backbone', function(){
   describe('.File', function(){
@@ -31,30 +32,32 @@ describe('Backbone', function(){
         done();
       });
       describe('writing with sync should return a promise', function(){
-        beforeEach(function(done){
-          this.stub = sinon.stub(Backbone.File, "sync", function(){
-            var deferred, promise;
-            deferred = when.defer();
-            promise = deferred.promise;
-            deferred.resolve({name: 'filename', data: []});
-            return promise;
+        testInBrowserOnly(this)(function(){
+          beforeEach(function(done){
+            this.stub = sinon.stub(Backbone.File, "sync", function(){
+              var deferred, promise;
+              deferred = when.defer();
+              promise = deferred.promise;
+              deferred.resolve({name: 'filename', data: []});
+              return promise;
+            });
+            done();
           });
-          done();
-        });
 
-        afterEach(function(done){
-          Backbone.File.sync.restore();
-          done();
-        });
+          afterEach(function(done){
+            Backbone.File.sync.restore();
+            done();
+          });
 
-        it('should return a promise', function(done){
-          expect(Backbone.File.sync({}).then).to.exist
-          done()
-        });
+          it('should return a promise', function(done){
+            expect(Backbone.File.sync({}).then).to.exist
+            done()
+          });
 
-        it('should resolve the promise on success, with a file object,', function(done) {
-          Backbone.File.sync({}).inspect().state.should.equal("fulfilled");
-          done();
+          it('should resolve the promise on success, with a file object,', function(done) {
+            Backbone.File.sync({}).inspect().state.should.equal("fulfilled");
+            done();
+          });
         });
       });
     });
