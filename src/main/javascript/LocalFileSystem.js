@@ -6,48 +6,83 @@ var TEMP = global.TEMPORARY;
 var PERM = global.PERSISTENT;
 var LocalFileSystem;
 var requestPersistentQuota;
-var base = {
-  getPathAndFilenameFromFilename: function(filename){
-    var splitFilename = filename.split('/');
-    return [_.rest(_.initial(splitFilename)), _.last(splitFilename)];
-  },
-  createDirectoryFromPath: function(filesystem){
-    return function(filepath){
-      var loop, promise, promisesAndResolversAndSegments;
-      // create a promise and a resolver for each segment
-      promisesAndResolversAndSegments = _.map(filepath, function(pathSegment){
-        var segmentDeferred = when.defer();
-        return [segmentDeferred.promise, segmentDeferred.resolver, pathSegment];
-      });
-      //join all the promises into one via when.all
-      promise = when.all(_.reduce(promisesAndResolversAndSegments, function(promises, promiseAndResolver){
-        return promises.concat(_.head(promiseAndResolver));
-      }, []));
-      //loops through the promises and resolvers. when one is created, resolve
-      // its promise and then loop through the rest.
-      loop = function(directory, promisesAndResolvers){
-        var success, failure, headPromiseAndResolver, rest;
-        if(promisesAndResolvers.length > 0){
-          headPromiseAndResolver = _.head(promisesAndResolvers);
-          rest = promisesAndResolvers.length > 1 ? _.rest(promisesAndResolvers) : [];
-          success = function(directory){
-            headPromiseAndResolver[1].resolve(directory);
-            loop(directory, rest);
-          };
-          failure = function(err){
-            headPromiseAndResolver[1].reject(err);
-          };
-          //the segment to create is the third element in the array
-          directory.getDirectory(headPromiseAndResolver[2], {create: true}, success, failure);
-          return;
-        }else{
-          return directory;
-        }
+function getPathAndFilenameFromFilename(filename) {
+  var splitFilename = filename.split('/');
+  return [_.rest(_.initial(splitFilename)), _.last(splitFilename)];
+}
+function createDirectoryFromPath(filesystem) {
+  return function(filepath){
+    var loop, promise, promisesAndResolversAndSegments;
+    // create a promise and a resolver for each segment
+    promisesAndResolversAndSegments = _.map(filepath, function(pathSegment){
+      var segmentDeferred = when.defer();
+      return [segmentDeferred.promise, segmentDeferred.resolver, pathSegment];
+    });
+    //join all the promises into one via when.all
+    promise = when.all(_.reduce(promisesAndResolversAndSegments, function(promises, promiseAndResolver){
+      return promises.concat(_.head(promiseAndResolver));
+    }, []));
+    //loops through the promises and resolvers. when one is created, resolve
+    // its promise and then loop through the rest.
+    loop = function(directory, promisesAndResolvers){
+      var success, failure, headPromiseAndResolver, rest;
+      if(promisesAndResolvers.length > 0){
+        headPromiseAndResolver = _.head(promisesAndResolvers);
+        rest = promisesAndResolvers.length > 1 ? _.rest(promisesAndResolvers) : [];
+        success = function(directory){
+          headPromiseAndResolver[1].resolve(directory);
+          loop(directory, rest);
+        };
+        failure = function(err){
+          headPromiseAndResolver[1].reject(err);
+        };
+        //the segment to create is the third element in the array
+        directory.getDirectory(headPromiseAndResolver[2], {create: true}, success, failure);
+        return;
+      }else{
+        return directory;
+      }
+    };
+    loop(filesystem.root, promisesAndResolversAndSegments);
+    return promise;
+  };
+}
+function getFileEntry (filesystem) {
+  return function(filepath){
+    return function(create){
+      var deferred, promise, pathAndFilename, file, filepaths, getFileEntry, rejectPromise, directoriesSuccess;
+      pathAndFilename = getPathAndFilenameFromFilename(filepath);
+      filepaths = pathAndFilename[0];
+      file = pathAndFilename[1];
+      deferred = when.defer();
+      promise = deferred.promise;
+      getFileEntry = function(){
+        filesystem.root.getFile(filepaths, {create: create}, function(fileEntry){
+          deferred.resolve(fileEntry);
+        }, function(err){
+          deferred.reject(err);
+        });
       };
-      loop(filesystem.root, promisesAndResolversAndSegments);
+      directoriesSuccess = function(directories){
+        deferred.notify("directories created.");
+        getFileEntry();
+      };
+      rejectPromise = function(err) {
+        deferred.reject(err);
+      };
+      if(create === true) {
+        createDirectoryFromPath(filesystem)(filepaths).then(getFileEntry, rejectPromise);
+      } else {
+        getFileEntry();
+      }
       return promise;
     };
-  }
+  };
+}
+var base = {
+  getPathAndFilenameFromFilename: getPathAndFilenameFromFilename,
+  createDirectoryFromPath: createDirectoryFromPath,
+  getFileEntry: getFileEntry
 };
 if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
   var requestFileSystem = global.requestFileSystem || global.webkitRequestFileSystem;
@@ -108,37 +143,7 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
         }, function(error){deferred.reject(error);});
         return promise;
       },
-      Nothing: {},
-      // // this returns an either, which is a function with a left
-      // // containing an Error of some type, or right, which contains
-      // // a value. Lefts and Rights are themselves Eithers, which
-      // // means that they are mapable objects. In this case
-      // // the Either returned contains an Left(Error) or a 
-      // // Right(PromiseOfDirectory)
-      // createDirectoryFromPath: function(filesystem) {
-      //   return function(filepath) {
-      //     var pathSegments, deferred, promise, dirEntrySuccess, dirEntryFailure, dirPromise;
-      //     deferred = when.defer();
-      //     promise = deferred.promise;
-      //     pathSegments = filepath.split("/");
-      //     dirEntrySuccess = function(remainingSegments) { 
-      //       if(remainingSegments.length > 1){
-      //         return function(){};
-      //       }
-      //       return function(directoryEntry){};
-      //     };
-      //     dirEntryFailure = function(err){
-      //     };
-          
-      //     return dirPromise;
-//        };
-//      },
-      getFileEntry: function(filesystem){
-        return function(filename){
-          var pathAndFilename = this.getPathAndFilenameFromFilename(filename);
-          
-        };        
-      }
+      Nothing: {}
     });
   };
 } else {

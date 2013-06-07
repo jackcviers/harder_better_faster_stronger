@@ -362,7 +362,7 @@ describe('LeftProjection', function(){
       done();
     });
     it('should apply the side-effecting function and return the result of it if the either is a left', function(done){
-      this.leftProjectionOfLeft.foreach(function(num){ console.log('Woohoo!'); return 4;}).should.equal(4);
+      this.leftProjectionOfLeft.foreach(function(num){ return 4;}).should.equal(4);
       done();
     });
     it('should not call the side effecter and return {} if the either is a Right', function(done){
@@ -539,13 +539,13 @@ describe('RightProjection', function(){
     });
     it('should return the result of applying the side-effecting function to the value of the either if the either is a Right', function(done){
       var spy = sinon.spy();
-      this.rightProjectionOfRight.foreach(function(num){ console.log('Applied! ' + num); spy(); return num}).should.equal(1);
+      this.rightProjectionOfRight.foreach(function(num){ spy(); return num}).should.equal(1);
       spy.should.have.been.called;
       done();
     });
     it('should return {} if the either is a Left', function(done){
       var spy = sinon.spy();
-      JSON.stringify(this.rightProjectionOfLeft.foreach(function(num){console.log('Applied! ' + num); return num;})).should.equal("{}")
+      JSON.stringify(this.rightProjectionOfLeft.foreach(function(num){return num;})).should.equal("{}")
       spy.should.not.have.been.called;
       done();
     });    

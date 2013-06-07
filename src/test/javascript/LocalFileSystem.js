@@ -7,7 +7,7 @@ var expect = chai.expect;
 var should = chai.should();
 var _ = require('underscore');
 var LocalFileSystem = require('../../main/javascript/LocalFileSystem.js');
-
+var when = require('when');
 var testInBrowserOnly = function(context) {
   return function(testFn) {
     if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
@@ -81,7 +81,95 @@ describe('LocalFileSystem', function() {
               done();
             };
             promise = this.boundDirectoryCreator(this.pathAndFilename[0]);
-            promise.then(function(directory){ spy(); check();}, function(err){ console.log(err); check();});
+            promise.then(function(directory){ spy(); check();}, function(err){ check();});
+          });
+        });
+      });
+    });
+    describe('.getFileEntry(filesystem)(fullfilepath)(create)', function(){
+      testInBrowserOnly(this)(function(){
+        beforeEach(function(done){
+          this.expectedFilename = "path.ext"
+          this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
+          this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
+          this.expectedPathSegments = ["test", "me", "for"];
+          this.promise = this.fs.requestTemporaryFileSystem(5);
+          this.promise.then((function(context) { 
+            return function(filesystem){
+              context.boundDirectoryCreator = context.fs.createDirectoryFromPath(filesystem);
+              context.boundFileEntryFetcher = context.fs.getFileEntry(filesystem);
+              done();
+            };
+          }(this)), function(err){done();});
+        });
+        afterEach(function(done){
+          this.boundDirectoryCreator = this.boundFileEntryFetcher = this.expectedFilename, this.inputFilenameAndPath, this.pathAndFilename, this.expectedPathSegments = {};
+          done();
+        });
+        it('should exist', function(done){
+          expect(this.fs.getFileEntry).to.exist
+          done();
+        });
+        it('should return a promise', function(done){
+          expect(this.boundFileEntryFetcher(this.inputFilenameAndPath)(true).then).to.exist
+          done();
+        });
+        it('should create a file entry', function(done){
+          var promise, check, spy;
+          spy = sinon.spy();
+          check = function(){
+            spy.should.have.been.called;
+            done();
+          };
+          promise = this.boundFileEntryFetcher(this.inputFilenameAndPath)(true);
+          promise.then(function(fileEntry){
+            spy();
+            check();
+          }, function(err){ check();});
+        });
+        it('should get an existing fileEntry', function(done){
+          var promise, check, spy;
+          spy = sinon.spy();
+          check = function() {
+            spy.should.have.been.called;
+            done();
+          };
+          var creatorReader = this.boundFileEntryFetcher(this.inputFilenameAndPath);
+          promise = creatorReader(true)
+          promise.then(function(fileEntry){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            fileEntry.createWriter(function(writer){
+              deferred.resolve(writer);
+            }, function(err){
+                deferred.reject(err);});
+            return promise;
+          }, function(err){
+            check();
+          }).then(function(writer){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            writer.onwriteend = function(event){
+              deferred.resolve(event.target);
+            };
+            writer.onerror = function(err) {
+              deferred.reject(err);
+            }
+            writer.write(new Blob(['Test'], {type: 'text/plain'}));
+            return promise;
+          }, function(err){ 
+            check();
+          }).then(function(writer){
+            return creatorReader(false);
+          }, function(err){
+            check();
+          }).then(function(fileEntry){
+            spy();
+            check();
+          }, function(err){
+            check();
           });
         });
       });
