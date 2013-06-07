@@ -47,34 +47,41 @@ describe('LocalFileSystem', function() {
         done();
       });
       describe('.createDirectoryFromPath(this.fs)', function(){
-        beforeEach(function(done){
-          this.expectedFilename = "path.ext"
-          this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
-          this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
-          this.expectedPathSegments = ["test", "me", "for"];
-          this.boundDirectoryCreator = this.fs.createDirectoryFromPath(this.fs);
-          done();
-        });
-        afterEach(function(done){
-          this.boundDirectoryCreator = this.expectedFilename, this.inputFilenameAndPath, this.pathAndFilename, this.expectedPathSegments = {};
-          done();
-        });
-        it('should return a function', function(done){
-          this.boundDirectoryCreator.should.be.an.instanceof(Function);
-          done();
-        });
         testInBrowserOnly(this)(function(){
+          beforeEach(function(done){
+            this.expectedFilename = "path.ext"
+            this.inputFilenameAndPath = ["", "test", "me", "for", this.expectedFilename].join("/");
+            this.pathAndFilename = this.fs.getPathAndFilenameFromFilename(this.inputFilenameAndPath);
+            this.expectedPathSegments = ["test", "me", "for"];
+            this.promise = this.fs.requestTemporaryFileSystem(5);
+            this.promise.then((function(context) { 
+              return function(filesystem){
+                context.boundDirectoryCreator = context.fs.createDirectoryFromPath(filesystem);
+                done();
+              };
+            }(this)), function(err){ done();});
+          });
+          afterEach(function(done){
+            this.boundDirectoryCreator = this.expectedFilename, this.inputFilenameAndPath, this.pathAndFilename, this.expectedPathSegments = {};
+            done();
+          });
+          it('should return a function', function(done){
+            this.boundDirectoryCreator.should.be.an.instanceof(Function);
+            done();
+          });
           it('should return a promise of a directory', function(done){
-            expect(this.boundDirectoryCreator(this.inputFilenameAndPath).then).to.exist;
+            expect(this.boundDirectoryCreator(this.pathAndFilename[0]).then).to.exist;
             done();
           });
           it('should create the directory /test/me/for', function(done){
-            var spy, promise;
+            var spy, promise, check;
             spy = sinon.spy();
-            promise = this.boundDirectoryCreator(this.inputFilenameAndPath);
-            promise.then(function(directory){ spy(); }, function(err){});
-            spy.should.have.been.called;
-            done();
+            check = function(){
+              spy.should.have.been.called;
+              done();
+            };
+            promise = this.boundDirectoryCreator(this.pathAndFilename[0]);
+            promise.then(function(directory){ spy(); check();}, function(err){ console.log(err); check();});
           });
         });
       });

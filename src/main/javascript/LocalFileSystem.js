@@ -13,15 +13,38 @@ var base = {
   },
   createDirectoryFromPath: function(filesystem){
     return function(filepath){
-      var deferred, promise, createRecursiveDirectory;
-      deferred = when.defer();
-      promise = deferred.promise;
-      createRecursiveDirectory = function(remainingSegments){
-        var directoryDeferred, directoryPromise, directorySuccess, directoryFailure;
-        directoryDeferred = when.defer();
-        directoryPromise = directoryDeferred.promise;
-        
+      var loop, promise, promisesAndResolversAndSegments;
+      // create a promise and a resolver for each segment
+      promisesAndResolversAndSegments = _.map(filepath, function(pathSegment){
+        var segmentDeferred = when.defer();
+        return [segmentDeferred.promise, segmentDeferred.resolver, pathSegment];
+      });
+      //join all the promises into one via when.all
+      promise = when.all(_.reduce(promisesAndResolversAndSegments, function(promises, promiseAndResolver){
+        return promises.concat(_.head(promiseAndResolver));
+      }, []));
+      //loops through the promises and resolvers. when one is created, resolve
+      // its promise and then loop through the rest.
+      loop = function(directory, promisesAndResolvers){
+        var success, failure, headPromiseAndResolver, rest;
+        if(promisesAndResolvers.length > 0){
+          headPromiseAndResolver = _.head(promisesAndResolvers);
+          rest = promisesAndResolvers.length > 1 ? _.rest(promisesAndResolvers) : [];
+          success = function(directory){
+            headPromiseAndResolver[1].resolve(directory);
+            loop(directory, rest);
+          };
+          failure = function(err){
+            headPromiseAndResolver[1].reject(err);
+          };
+          //the segment to create is the third element in the array
+          directory.getDirectory(headPromiseAndResolver[2], {create: true}, success, failure);
+          return;
+        }else{
+          return directory;
+        }
       };
+      loop(filesystem.root, promisesAndResolversAndSegments);
       return promise;
     };
   }
