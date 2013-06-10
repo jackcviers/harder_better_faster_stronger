@@ -55,7 +55,7 @@ module.exports = {
           writer.onerror = function(err){
             deferred.reject(err);
           };
-          writer.write(model.toSerialzed());
+          writer.write(model.toSerialized());
           return promise;
         }, function(err){ return err; }).then(function(url){
           model.filesystemUrl = url;
