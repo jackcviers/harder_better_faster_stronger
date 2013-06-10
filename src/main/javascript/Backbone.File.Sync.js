@@ -29,7 +29,7 @@ module.exports = {
         var deferred, promise;
         deferred = when.defer();
         promise = deferred.promise;
-        LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(true).then(function(fileEntry){
+        LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(true).then(function(fileEntry){
           var entryDeferred, entryPromise;
           entryDeferred = when.defer();
           entryPromise = entryDeferred.promise;
@@ -66,7 +66,7 @@ module.exports = {
           var deferred, promise;
           deferred = when.defer();
           promise = deferred.promise;
-          LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
+          LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
             var fileDeferred, filePromise;
             fileDeferred = when.defer();
             filePromise = fileDeferred.promise;
@@ -106,7 +106,7 @@ module.exports = {
           var deferred, promise;
           deferred = when.defer();
           promise = deferred.promise;
-          LocalFileSystem().getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
+          LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
             var removeDeferred, removePromise;
             removeDeferred = when.defer();
             removePromise = removeDeferred.promise;

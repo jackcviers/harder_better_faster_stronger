@@ -1,15 +1,22 @@
 var global = (typeof window !== 'undefined' && window != null) ? window : global;
 var _ = require('underscore');
 var when = require('when');
+var callbacks = require('when/callbacks');
 var _ref = require('./Either'), left = _ref.left, right = _ref.right;
 var TEMP = global.TEMPORARY;
 var PERM = global.PERSISTENT;
 var LocalFileSystem;
 var requestPersistentQuota;
+
+// split the path into segments and filename
 function getPathAndFilenameFromFilename(filename) {
   var splitFilename = filename.split('/');
+  //segments array is first, filename is last
   return [_.rest(_.initial(splitFilename)), _.last(splitFilename)];
 }
+
+// create each direcotry in turn, and return the last directory created in
+// a promise
 function createDirectoryFromPath(filesystem) {
   return function(filepath){
     var loop, promise, promisesAndResolversAndSegments;
@@ -47,44 +54,53 @@ function createDirectoryFromPath(filesystem) {
     return promise;
   };
 }
+
+// changes a filesystem url (filesystem:protocol://domain/filepath) into a 
+// fileEntry for reading or writing. uses the when callbacks module
+// to lift the callback func to a promise.
+function resolveLocalFileSystemURL(filesystem){
+  return function(url){
+    var resolver;
+    // webkit and firefox have different url resolvers.
+    resolver = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
+    return callbacks.call(resolver, url);
+  };
+}
+// getFileEntry lifts native into a promise
 function getFileEntry (filesystem) {
   return function(filepath){
     return function(create){
-      var deferred, promise, pathAndFilename, file, filepaths, getFileEntry, rejectPromise, directoriesSuccess;
+      var pathAndFilename, getFileEntry;
       pathAndFilename = getPathAndFilenameFromFilename(filepath);
-      filepaths = pathAndFilename[0];
-      file = pathAndFilename[1];
-      deferred = when.defer();
-      promise = deferred.promise;
-      getFileEntry = function(){
-        filesystem.root.getFile(filepaths, {create: create}, function(fileEntry){
-          deferred.resolve(fileEntry);
-        }, function(err){
-          deferred.reject(err);
-        });
+      getFileEntry = function(arrOfDir) {
+        var deferred, promise;
+        deferred = when.defer();
+        promise = deferred.promise;
+        if(create === true){
+          _.last(arrOfDir).getFile(pathAndFilename[1], {create: create}, function(fileEntry){deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
+        } else {
+          _.last(arrOfDir).getFile(pathAndFilename[1], function(fileEntry){deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
+        }        
+        return promise;
       };
-      directoriesSuccess = function(directories){
-        deferred.notify("directories created.");
-        getFileEntry();
-      };
-      rejectPromise = function(err) {
-        deferred.reject(err);
-      };
-      if(create === true) {
-        createDirectoryFromPath(filesystem)(filepaths).then(getFileEntry, rejectPromise);
+      if(create === true){
+        return createDirectoryFromPath(filesystem)(pathAndFilename[0]).then(getFileEntry, function(err){ return err; });
       } else {
-        getFileEntry();
+        return getFileEntry([filesystem.root]);
       }
-      return promise;
     };
   };
 }
 
+// not directly in LocalFileSystem so that we can call them internally
+// without the object reference
 var base = {
   getPathAndFilenameFromFilename: getPathAndFilenameFromFilename,
   createDirectoryFromPath: createDirectoryFromPath,
   getFileEntry: getFileEntry
 };
+// filesystem doesn't work in phantomjs, so expose the same
+// api, but reject the promises.
 if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
   var requestFileSystem = global.requestFileSystem || global.webkitRequestFileSystem;
   var requestPersistentQuota = function(type, sizeInMB, requestQuotaSuccess, requestQuotaFailure) {
@@ -94,63 +110,22 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
       return left("Persistent storage not available in this browser. Try a webkit browser");
     }
   };
-  LocalFileSystem = function(name){
-    return _.extend(base, {
-      name: name,
+  LocalFileSystem = _.extend(base, {
       requestTemporaryFileSystem: function(sizeInMB) {
-        var deferred, promise, success, failure;
-        deferred = when.defer();
-        promise = deferred.promise;
-        success = (function(that) { return function(fs) {
-          that.filesystem = fs;
-          deferred.resolve(fs);
-        };}(this));
-        failure = function(error) {
-          deferred.reject(error);
-        };
-        requestFileSystem(TEMP, sizeInMB * 1024 * 1024, success, failure);
-        return promise;
+        return callbacks.call(requestFileSystem, TEMP, sizeInMB * 1024 * 1024);
       },
       requestPersistentFileSystem: function(sizeInMB) {
-        var deferred, promise, success, failure, type, requestQuota, sizeInBytes;
-        deferred = when.defer();
-        promise = deferred.promise;
-        type = PERM;
-        sizeInBytes = sizeInMB * 1024 * 1024;
-        requestQuota = function(type, sizeInBytes){
-          var requestQuotaDeferred, requestQuotaPromise, requestQuotaSuccess, requestQuotaFailure;
-          requestQuotaDeferred = when.defer();
-          requestQuotaPromise = requestQuotaDeferred.promise;
-          requestQuotaSuccess = function(sizeGranted) {
-            requestQuotaDeferred.resolve(sizeGranted);
-          };
-          requestQuotaFailure = function(error) {
-            requestQuotaDeferred.reject(error);
-          };
-          requestPersistentQuota(type, sizeInMB, requestQuotaSuccess, requestQuotaFailure).left().foreach(function(str){ requestQuotaFailure(str); });
-          return requestQuotaPromise;
-        };
-        success = (function(that){
-          return function(fs) {
-            that.filesystem = fs;
-            deferred.resolve(fs);
-          };
-        })(this);
-        failure = function(error) {
-          deferred.reject(error);
-        };
-        requestQuota(type, sizeInBytes).then(function(sizeGranted){
-          requestFileSystem(type, sizeInBytes, success, failure);
-        }, function(error){deferred.reject(error);});
-        return promise;
+        return callbacks.call(requestPersistentQuota, PERM, sizeInMB * 1024 * 1024).then(
+          function(sizeGranted){
+            return callbacks.call(requestFileSystem, PERM, sizeInMB * 1024 * 1024);
+          }, function(err) {
+            return err;
+          });
       },
       Nothing: {}
     });
-  };
 } else {
-  LocalFileSystem = function(name) {
-    return _.extend(base, {
-      name: name,
+  LocalFileSystem = _.extend(base, {
       requestTemporaryFileSystem: function(sizeInMB) {
         var deferred, promise;
         deferred = when.defer();
@@ -165,8 +140,6 @@ if (window.navigator.userAgent.indexOf('PhantomJS') < 0) {
       },
       Nothing: {}
     });
-  };
 }
 
 module.exports = LocalFileSystem;
-

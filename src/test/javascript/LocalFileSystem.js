@@ -8,28 +8,21 @@ var should = chai.should();
 var _ = require('underscore');
 var LocalFileSystem = require('../../main/javascript/LocalFileSystem.js');
 var when = require('when');
+var callbacks = require('when/callbacks');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
 describe('LocalFileSystem', function() {
   it('should exist', function(done) {
     expect(LocalFileSystem).to.exist
     done();
   });
-  it('should be a function', function(done) {
-    LocalFileSystem.should.be.an.instanceof(Function);
-    done();
-  });
   describe('LocalFileSystem("name")', function(){
     beforeEach(function(done){
       this.name = "abcd";
-      this.fs = LocalFileSystem(this.name);
+      this.fs = LocalFileSystem;
       done();
     });
     afterEach(function(done){
       this.name = this.fs = null;
-      done();
-    });
-    it('should return an object with name set to the passed value', function(done){
-      this.fs.name.should.equal(this.name);
       done();
     });
     describe('.createDirectoryFromPath(filesystem)(filepath)', function(){
@@ -66,6 +59,7 @@ describe('LocalFileSystem', function() {
           });
           it('should create the directory /test/me/for', function(done){
             var spy, promise, check;
+            this.timeout(30000);
             spy = sinon.spy();
             check = function(){
               spy.should.have.been.called;
@@ -107,6 +101,7 @@ describe('LocalFileSystem', function() {
         });
         it('should create a file entry', function(done){
           var promise, check, spy;
+          this.timeout(10000);
           spy = sinon.spy();
           check = function(){
             spy.should.have.been.called;
@@ -120,13 +115,14 @@ describe('LocalFileSystem', function() {
         });
         it('should get an existing fileEntry', function(done){
           var promise, check, spy;
+          this.timeout(10000);
           spy = sinon.spy();
           check = function() {
             spy.should.have.been.called;
             done();
           };
           var creatorReader = this.boundFileEntryFetcher(this.inputFilenameAndPath);
-          promise = creatorReader(true)
+          promise = creatorReader(true);
           promise.then(function(fileEntry){
             var deferred, promise;
             deferred = when.defer();
@@ -134,34 +130,29 @@ describe('LocalFileSystem', function() {
             fileEntry.createWriter(function(writer){
               deferred.resolve(writer);
             }, function(err){
-                deferred.reject(err);});
+              deferred.reject(err);
+            });
             return promise;
-          }, function(err){
-            check();
-          }).then(function(writer){
+          }, function(err){ check(); }).then(function(writer){
             var deferred, promise;
             deferred = when.defer();
             promise = deferred.promise;
             writer.onwriteend = function(event){
-              deferred.resolve(event.target);
+              deferred.resolve(event);
             };
-            writer.onerror = function(err) {
+            writer.onerror = function(err){
               deferred.reject(err);
-            }
+            };
             writer.write(new Blob(['Test'], {type: 'text/plain'}));
             return promise;
-          }, function(err){ 
-            check();
-          }).then(function(writer){
+          }, function(err){}).then(function(writer){
             return creatorReader(false);
-          }, function(err){
-            check();
-          }).then(function(fileEntry){
-            spy();
-            check();
-          }, function(err){
-            check();
-          });
+           }, function(err){ check(); }).then(function(fileEntry){
+             spy();
+             check();
+           }, function(err){
+             check();
+           });
         });
       });
     });
@@ -214,6 +205,46 @@ describe('LocalFileSystem', function() {
             function(){spy(); testSpyCall();},
             function(){ testSpyCall();}
           );
+        });
+      });
+    });
+    describe('.resolveFilesystemUri', function(){
+      testInBrowserOnly(this)(function(){
+        beforeEach(function(done){
+          LocalFileSystem.requestPersistentFileSystem(5).then(function(fs){
+            return LocalFileSystem.getFileEntry(fs)('/test/text.txt')(true);
+          }, function(err){
+            done();
+          }).then(function(fileEntry){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            fileEntry.createWriter(function(writer){
+              deferred.resolve(writer);
+            }, function(err){ deferred.reject(err);})
+            return promise;
+          }, function(err){ done(); }).then(function(writer){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            writer.onwriteend = function(event) {
+              deferred.resolve(event);
+            };
+            writer.onerror = function(err) {
+              deferred.reject(err);
+            };
+            writer.write(new Blob(['test'], {type: 'text/plain'}));
+            return promise;
+          }, function(err){ done();}).then(function(event){
+            done();
+          }, function(err){});
+        });
+        afterEach(function(done){
+          done();
+        });
+        it('should exist', function(done){
+          expect(LocalFileSystem.resolveFilesystemUri).to.exist;
+          done();
         });
       });
     });
