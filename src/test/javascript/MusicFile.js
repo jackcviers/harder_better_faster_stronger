@@ -62,9 +62,49 @@ describe('MusicFile', function(){
           done();
         });
       });
-      describe('size', function(done){
+      describe('#get("size")"', function(done){
         it('should exist', function(done){
           this.instance.has('size').should.be.true;
+          done();
+        });
+        it('should be 0', function(done){
+          this.instance.get('size').should.equal(0);
+          done();
+        });
+      });
+      describe('#get("data")', function(){
+        it('should exist', function(done){
+          this.instance.has('data').should.be.true;
+          done();
+        });
+        it('should be an empty string', function(done){
+          this.instance.get('data').should.equal('');
+          done();
+        });
+      });
+      describe('#filesystemUrl', function(){
+        it('should exist', function(done){
+          expect(this.instance.filesystemUrl).to.exist;
+          done();
+        });
+        it('should be filesystem:/', function(done){
+          this.instance.filesystemUrl.should.equal("filesystem:/");
+          done();
+        });
+      });
+      describe('#toSerialzed()', function(){
+        it('should exist', function(done){
+          expect(this.instance.toSerialized).to.exist;
+          done();
+        });
+        it('should be a function', function(done){
+          this.instance.toSerialized.should.be.an.instanceof(Function);
+          done();
+        });
+        it('should return an empty blob of type text/plain', function(done){
+          var serialized = this.instance.toSerialized();
+          serialized.type.should.equal("text/plain");
+          serialized.size.should.equal(0);
           done();
         });
       });
