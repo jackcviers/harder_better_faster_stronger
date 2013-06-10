@@ -58,13 +58,8 @@ function createDirectoryFromPath(filesystem) {
 // changes a filesystem url (filesystem:protocol://domain/filepath) into a 
 // fileEntry for reading or writing. uses the when callbacks module
 // to lift the callback func to a promise.
-function resolveLocalFileSystemURL(filesystem){
-  return function(url){
-    var resolver;
-    // webkit and firefox have different url resolvers.
-    resolver = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
-    return callbacks.call(resolver, url);
-  };
+function resolveLocalFileSystemURL(url) {
+  return callbacks.call(window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL, url);
 }
 // getFileEntry lifts native into a promise
 function getFileEntry (filesystem) {
@@ -77,9 +72,10 @@ function getFileEntry (filesystem) {
         deferred = when.defer();
         promise = deferred.promise;
         if(create === true){
-          _.last(arrOfDir).getFile(pathAndFilename[1], {create: create}, function(fileEntry){deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
+          ((arrOfDir.length > 0) ? _.last(arrOfDir) : filesystem.root).getFile(pathAndFilename[1], {create: create}, function(fileEntry){deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
         } else {
-          _.last(arrOfDir).getFile(pathAndFilename[1], function(fileEntry){deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
+          filesystem.root.getFile(filepath, {}, function(fileEntry){
+            deferred.resolve(fileEntry); }, function(err){ deferred.reject(err); });
         }        
         return promise;
       };
@@ -97,7 +93,8 @@ function getFileEntry (filesystem) {
 var base = {
   getPathAndFilenameFromFilename: getPathAndFilenameFromFilename,
   createDirectoryFromPath: createDirectoryFromPath,
-  getFileEntry: getFileEntry
+  getFileEntry: getFileEntry,
+  resolveLocalFileSystemURL: resolveLocalFileSystemURL
 };
 // filesystem doesn't work in phantomjs, so expose the same
 // api, but reject the promises.

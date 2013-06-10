@@ -121,8 +121,7 @@ describe('LocalFileSystem', function() {
             spy.should.have.been.called;
             done();
           };
-          var creatorReader = this.boundFileEntryFetcher(this.inputFilenameAndPath);
-          promise = creatorReader(true);
+          promise = this.boundFileEntryFetcher(this.inputFilenameAndPath)(true);
           promise.then(function(fileEntry){
             var deferred, promise;
             deferred = when.defer();
@@ -133,26 +132,25 @@ describe('LocalFileSystem', function() {
               deferred.reject(err);
             });
             return promise;
-          }, function(err){ check(); }).then(function(writer){
+          }, function(err){ check();}).then(function(writer){
             var deferred, promise;
             deferred = when.defer();
             promise = deferred.promise;
             writer.onwriteend = function(event){
               deferred.resolve(event);
             };
-            writer.onerror = function(err){
-              deferred.reject(err);
-            };
-            writer.write(new Blob(['Test'], {type: 'text/plain'}));
+            writer.onerror = function(event){
+              deferred.reject(event);
+            }
+            writer.write(new Blob(["Test"], {type: "text/plain"}));
             return promise;
-          }, function(err){}).then(function(writer){
-            return creatorReader(false);
-           }, function(err){ check(); }).then(function(fileEntry){
-             spy();
-             check();
-           }, function(err){
-             check();
-           });
+          }, function(err){check();}).then((function(context){
+            return function(event){
+            return context.boundFileEntryFetcher(context.inputFilenameAndPath)(false);
+          }}(this)), function(err){ check();}).then(function(fileEntry){
+            spy();
+            check();
+          }, function(err){check();});
         });
       });
     });
@@ -208,43 +206,80 @@ describe('LocalFileSystem', function() {
         });
       });
     });
-    describe('.resolveFilesystemUri', function(){
-      testInBrowserOnly(this)(function(){
+    testInBrowserOnly(this)(function(){
+      describe('.resolveLocalFileSystemURL(url)', function(){
         beforeEach(function(done){
-          LocalFileSystem.requestPersistentFileSystem(5).then(function(fs){
-            return LocalFileSystem.getFileEntry(fs)('/test/text.txt')(true);
+          this.fs.requestPersistentFileSystem(5).then(
+            (function(context){
+              return function(filesystem){
+                context.filesystem = filesystem;
+                return context.fs.getFileEntry(filesystem)("/test.text")(true)
+              };
+            }(this)), function(err){ 
+              done();
+            }
+          ).then((function(context){
+            return function(fileEntry){
+              var deferred, promise;
+              context.fileentry = fileEntry;
+              deferred = when.defer();
+              promise = deferred.promise;
+              
+              fileEntry.createWriter(function(writer){
+                deferred.resolve(writer);
+              }, function(err){
+                deferred.reject(err);
+              });
+              return promise;
+            };
+          }(this)), function(err){ 
+            done();
+          }).then(
+            function(writer){
+              var deferred, promise;
+              deferred = when.defer();
+              promise = deferred.promise;
+              writer.onwriteend = function(event){
+                deferred.resolve(event);
+              };
+              writer.onerror = function(err){
+                deferred.reject(err);
+              };
+              writer.write(new Blob(["test"], {type: "text/plain"}));
+              return promise;
+            },
+            function(err){
+              done();
+            }
+          ).then(function(event){
+            done();
           }, function(err){
             done();
-          }).then(function(fileEntry){
-            var deferred, promise;
-            deferred = when.defer();
-            promise = deferred.promise;
-            fileEntry.createWriter(function(writer){
-              deferred.resolve(writer);
-            }, function(err){ deferred.reject(err);})
-            return promise;
-          }, function(err){ done(); }).then(function(writer){
-            var deferred, promise;
-            deferred = when.defer();
-            promise = deferred.promise;
-            writer.onwriteend = function(event) {
-              deferred.resolve(event);
-            };
-            writer.onerror = function(err) {
-              deferred.reject(err);
-            };
-            writer.write(new Blob(['test'], {type: 'text/plain'}));
-            return promise;
-          }, function(err){ done();}).then(function(event){
-            done();
-          }, function(err){});
+          });
         });
         afterEach(function(done){
+          this.filesystem = this.fileentry = {};
           done();
         });
         it('should exist', function(done){
-          expect(LocalFileSystem.resolveFilesystemUri).to.exist;
+          expect(this.fs.resolveLocalFileSystemURL).to.exist;
           done();
+        });
+        it('should be a function', function(done){
+          this.fs.resolveLocalFileSystemURL.should.be.an.instanceof(Function);
+          done();
+        });
+        it('should resolve to a fileEntry', function(done){
+          var spy, check;
+          spy = sinon.spy();
+          check = function(){
+            spy.should.have.been.called;
+            done();
+          };
+          this.fs.resolveLocalFileSystemURL(this.fileentry.toURL()).then(function(fileEntry){
+            spy();
+            check();
+          }, function(err){ check(); });
         });
       });
     });
