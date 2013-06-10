@@ -1,4 +1,5 @@
 var when = require('when');
+var callbacks = require('when/callbacks');
 var LocalFileSystem = require('./LocalFileSystem');
 var uuid = require('node-uuid');
 
@@ -37,22 +38,23 @@ module.exports = {
             var deferred, promise;
             deferred = when.defer();
             promise = deferred.promise;
-            fileEntry.createWriter(function([writer]){
+            fileEntry.createWriter(function(writer){
               deferred.resolve([writer, fileEntry.toURL()]);
             }, function(err){
               deferred.reject(err);
             });
             return promise;
         }, function(err){ return err; }).then(function(writerAndUrl){
-          var deferred, promise;
+          var deferred, promise, writer;
           deferred = when.defer();
           promise = deferred.promise;
+          writer = writerAndUrl[0];
           writer.onwriteend = function(event){
             deferred.resolve(writerAndUrl[1]);
           };
           writer.onerror = function(err){
             deferred.reject(err);
-          }
+          };
           writer.write(model.toSerialzed());
           return promise;
         }, function(err){ return err; }).then(function(url){
