@@ -29,35 +29,36 @@ module.exports = {
         var deferred, promise;
         deferred = when.defer();
         promise = deferred.promise;
-        LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(true).then(function(fileEntry){
-          var entryDeferred, entryPromise;
-          entryDeferred = when.defer();
-          entryPromise = entryDeferred.promise;
-          fileEntry.createWriter(function(writer){
-            entryDeferred.resolve(writer);
-          }, function(err){
-            entryDeferred.reject(err);
-          });
-          return entryPromise;
-        }, function(err){
-          deferred.reject(err);
-        }).then(function(writer){
-          var writerDeferred, writerPromise;
-          writer.onwriteend = function(event) {
-            writerDeferred.resolve(event.target);
+        LocalFileSystem.requestPersistentFileSystem(model.collection.sizeInMB * 1.50).then(
+          function(filesystem){
+            return LocalFileSystem.getFileEntry(filesystem)(true);
+          },
+          function(err){ return err; }).then(function(fileEntry){
+            var deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
+            fileEntry.createWriter(function([writer]){
+              deferred.resolve([writer, fileEntry.toURL()]);
+            }, function(err){
+              deferred.reject(err);
+            });
+            return promise;
+        }, function(err){ return err; }).then(function(writerAndUrl){
+          var deferred, promise;
+          deferred = when.defer();
+          promise = deferred.promise;
+          writer.onwriteend = function(event){
+            deferred.resolve(writerAndUrl[1]);
           };
-          writer.onerror = function(err) {
-            writerDeferred.reject(err);
-          };
-          writer.write(new Blob(model.toSerialzed, model.get('mimeType')));
-          return writerPromise;
-        }, function(err){
-          deferred.reject(err);
-        }).then(function(writer){
-          deferred.resolve(writer);
-        }, function(err){
-          deferred.reject(err);
-        });
+          writer.onerror = function(err){
+            deferred.reject(err);
+          }
+          writer.write(model.toSerialzed());
+          return promise;
+        }, function(err){ return err; }).then(function(url){
+          model.filesystemUrl = url;
+          deferred.resolve(model, options);
+        }, function(err){ deferred.reject(err); });
         return promise;
       };
       methodMap = {
@@ -66,68 +67,43 @@ module.exports = {
           var deferred, promise;
           deferred = when.defer();
           promise = deferred.promise;
-          LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
-            var fileDeferred, filePromise;
-            fileDeferred = when.defer();
-            filePromise = fileDeferred.promise;
-            fileEntry.file(function(file){
-              fileDeferred.resolve(file);
-            }, function(err){
-              fileDeferred.reject(err);
-            });
-            return filePromise;
-          }, function(err){}).then(function(file){
-            var reader, readerDeferred, readerPromise;
-            readerDeferred = when.defer();
-            readerPromise = readerDeferred.promise;
+          LocalFileSystem.resolveLocalFileSystemURL(model.filesystemUrl).then(function(fileEntry){
+            return callbacks.call(fileEntry.file);
+          }, function(err) { return err; }).then(function(file){
+            var reader, deferred, promise;
+            deferred = when.defer();
+            promise = deferred.promise;
             reader = new FileReader();
-            reader.onloadedend = function(event){
-              readerDeferred.resolve(event);
-            };
-            reader.onprogress = function(event){
-              readerDeferred.notify(event);
-            };
-            reader.onerror = function(err){
-              readerDeferred.reject(err);
-            };
+            reader.onloadedend = function(event) { deferred.resolve(event); };
+            reader.onerror = function(err) { deferred.reject(err); };
+            reader.onprogress = function(event) { deferred.notify(event); };
             reader.readAsArrayBuffer(file);
-            return readerPromise;
-          }, function(err){}).then(function(event){
+            return promise;
+          }, function(err){ return err; }).then(function(event){
             deferred.resolve(event.target);
-          }, function(err){}, function(event){
+          }, function(err){ 
+            deferred.reject(err);
+          }, function(event){
             deferred.notify(event.target);
           });
           return promise;
         },
         'update': createUpdate,
-        // again, much the same, except for we probably don't care
-        // about progress. At this point we can probably abstract out the read and write functions to avoid duplication
         'delete': function(model, options) {
           var deferred, promise;
           deferred = when.defer();
           promise = deferred.promise;
-          LocalFileSystem.getFileEntry(fs)(model.get('filepath'))(false).then(function(fileEntry){
-            var removeDeferred, removePromise;
-            removeDeferred = when.defer();
-            removePromise = removeDeferred.promise;
-            fileEntry.remove(function(){
-              removeDeferred.resolve("Deleted.");
-            }, function(err){
-              removeDeferred.reject(err);
-            });
-            return removePromise;
-          }, function(err){
-            deferred.reject(err);
-          }).then(function(str){
-            deferred.resolve(str);
-          }, function(err){
+          LocalFileSystem.resolveLocalFileSystemURL(model.filesystemUrl).then(function(fileEntry){
+            return callbacks.call(fileEntry.remove);
+          }, function(err){ return err; }).then(function() {
+            deferred.resolve("Deleted.");
+          }, function(err) {
             deferred.reject(err);
           });
           return promise;
         }
       };
-      
-      return promise;
+      return methodMap[method](model, options);
     }
   }
 };
