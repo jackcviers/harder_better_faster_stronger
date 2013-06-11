@@ -59,7 +59,7 @@ module.exports = {
           return promise;
         }, function(err){ return err; }).then(function(url){
           model.filesystemUrl = url;
-          deferred.resolve(model, options);
+          deferred.resolve([model, options]);
         }, function(err){ deferred.reject(err); });
         return promise;
       };
@@ -82,7 +82,7 @@ module.exports = {
             reader.readAsArrayBuffer(file);
             return promise;
           }, function(err){ return err; }).then(function(event){
-            deferred.resolve(event.target);
+            deferred.resolve([event.target]);
           }, function(err){ 
             deferred.reject(err);
           }, function(event){
@@ -98,14 +98,16 @@ module.exports = {
           LocalFileSystem.resolveLocalFileSystemURL(model.filesystemUrl).then(function(fileEntry){
             return callbacks.call(fileEntry.remove);
           }, function(err){ return err; }).then(function() {
-            deferred.resolve("Deleted.");
+            deferred.resolve(["Deleted."]);
           }, function(err) {
             deferred.reject(err);
           });
           return promise;
         }
       };
-      return methodMap[method](model, options);
+      var mm = methodMap[method](model, options);
+      console.log(mm);
+      return mm;
     }
   }
 };

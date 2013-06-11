@@ -13,7 +13,7 @@ _ = _ || require('underscore');
 var Backbone = global.Backbone;
 Backbone = Backbone ||  require('backbone');
 Backbone.$ = $
-var File = require('../../main/javascript/Backbone.File.Sync.js');
+var File = require('../../main/javascript/Backbone.File.Sync.js').File;
 Backbone = _.extend(Backbone, File);
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
@@ -31,10 +31,18 @@ describe('MusicFile', function(){
     });
     describe('new MusicFile', function(){
       beforeEach(function(done){
+        this.syncStub = sinon.stub(Backbone.File, "sync", function(){
+          var deferred, promise;
+          deferred = when.defer();
+          promise = deferred.promise;
+          deferred.resolve({name: 'filename', data: []});
+          return promise;
+        });
         this.instance = new MusicFile();
         done();
       });
       afterEach(function(done){
+        this.syncStub.restore();
         this.instance = {};
         done();
       });
@@ -105,6 +113,17 @@ describe('MusicFile', function(){
           var serialized = this.instance.toSerialized();
           serialized.type.should.equal("text/plain");
           serialized.size.should.equal(0);
+          done();
+        });
+      });
+      describe('#sync(method, model, [options])', function(){
+        it('should be a Function', function(done){
+          this.instance.sync.should.be.an.instanceof(Function);
+          done();
+        });
+        it('should be Backbone.File.Sync', function(done){
+          this.instance.save();
+          this.syncStub.should.have.been.called;
           done();
         });
       });
