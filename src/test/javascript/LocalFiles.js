@@ -58,7 +58,10 @@ describe('LocalFiles', function(done){
         expect(this.instance.create).to.exist;
         done();
       });
-      it('should be a Function');
+      it('should be a Function', function(done){
+        this.instance.create.should.be.an.instanceof(Function);
+        done();
+      });
       it('should accept an existing model');
       it('should accept a raw File object');
       it('should call sync on the model');
