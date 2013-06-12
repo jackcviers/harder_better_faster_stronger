@@ -53,5 +53,12 @@ describe('LocalFiles', function(done){
         done();
       });
     });
+    describe('#create(attrs, options)', function(){
+      it('should exist');
+      it('should be a Function');
+      it('should accept an existing model');
+      it('should accept a raw File object');
+      it('should call sync on the model');
+    });
   });
 });
