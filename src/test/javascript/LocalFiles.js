@@ -48,7 +48,10 @@ describe('LocalFiles', function(done){
         expect(this.instance.model).to.exist;
         done();
       });
-      it('should be MusicFile');
+      it('should be MusicFile', function(done){
+        this.instance.model.should.deep.equal(MusicFile);
+        done();
+      });
     });
   });
 });
