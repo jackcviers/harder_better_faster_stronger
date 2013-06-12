@@ -7,6 +7,8 @@ Backbone.$ = $;
 var File = require('./Backbone.File.Sync').File;
 var MusicFile = require('./MusicFile');
 
-var LocalFiles = Backbone.Collection.extend({});
+var LocalFiles = Backbone.Collection.extend({
+  model: MusicFile
+});
 
 module.exports = LocalFiles;

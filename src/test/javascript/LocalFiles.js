@@ -45,7 +45,7 @@ describe('LocalFiles', function(done){
     });
     describe('.model', function(){
       it('should exist', function(done){
-        expect(LocalFiles.Model).to.exist;
+        expect(this.instance.model).to.exist;
         done();
       });
       it('should be MusicFile');
