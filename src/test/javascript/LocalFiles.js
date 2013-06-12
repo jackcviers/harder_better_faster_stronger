@@ -28,7 +28,7 @@ describe('LocalFiles', function(done){
       done();
     });
     it('should be a Function', function(done){
-      LocalFiles.should.be.an.instancof(Function);
+      LocalFiles.should.be.an.instanceof(Function);
       done();
     });
     it('should be a Backbone.Collection');
