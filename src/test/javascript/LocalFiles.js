@@ -27,7 +27,10 @@ describe('LocalFiles', function(done){
       expect(LocalFiles).to.exist;
       done();
     });
-    it('should be a Function');
+    it('should be a Function', function(done){
+      LocalFiles.should.be.an.instancof(Function);
+      done();
+    });
     it('should be a Backbone.Collection');
   });
 });
