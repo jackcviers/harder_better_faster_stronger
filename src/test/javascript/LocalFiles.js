@@ -54,7 +54,10 @@ describe('LocalFiles', function(done){
       });
     });
     describe('#create(attrs, options)', function(){
-      it('should exist');
+      it('should exist', function(done){
+        expect(this.instance.create).to.exist;
+        done();
+      });
       it('should be a Function');
       it('should accept an existing model');
       it('should accept a raw File object');
