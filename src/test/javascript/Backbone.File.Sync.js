@@ -7,7 +7,7 @@ var should = chai.should();
 chai.use(sinonChai);
 var jQuery = global.jQuery;
 jQuery = jQuery || require('jquery-browserify');
-var $ = jQuery.$;
+var $ = jQuery;
 var _ = global._;
 _ = _ || require('underscore');
 var Backbone = global.Backbone;
