@@ -95,5 +95,11 @@ describe('FileTarget', function(){
         this.instance.fileDropped(mockEvent);
       });
     });
+    describe('#render', function(){
+      it('should exist');
+      it('should be a Function');
+      it('should return the view instance ("Be fluent!")');
+      it('should render something into the fixtures div');
+    });
   });
 });
