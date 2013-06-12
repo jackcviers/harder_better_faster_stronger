@@ -19,10 +19,14 @@ var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
 var MusicFile = require('../../main/javascript/MusicFile');
 var FileTarget = require('../../main/javascript/FileTarget.js');
+var LocalFiles = require('../../main/javascript/LocalFiles.js');
 
 describe('LocalFiles', function(done){
   testInBrowserOnly(this)(function(){
-    it('should exist');
+    it('should exist', function(done){
+      expect(LocalFiles).to.exist;
+      done();
+    });
     it('should be a Function');
     it('should be a Backbone.Collection');
   });
