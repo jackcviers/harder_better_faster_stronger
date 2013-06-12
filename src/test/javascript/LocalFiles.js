@@ -44,7 +44,10 @@ describe('LocalFiles', function(done){
       done();
     });
     describe('.model', function(){
-      it('should exist');
+      it('should exist', function(done){
+        expect(LocalFiles.Model).to.exist;
+        done();
+      });
       it('should be MusicFile');
     });
   });
