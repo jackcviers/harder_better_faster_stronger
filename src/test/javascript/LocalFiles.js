@@ -43,5 +43,9 @@ describe('LocalFiles', function(done){
       this.instance.should.be.an.instanceof(Backbone.Collection);
       done();
     });
+    describe('.model', function(){
+      it('should exist');
+      it('should be MusicFile');
+    });
   });
 });
