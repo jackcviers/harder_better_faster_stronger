@@ -35,6 +35,7 @@ module.exports = (grunt) ->
       'css/**'
       'fonts/**'
       'test/fonts/**'
+      'tmp/**'
     ]
     coffeeify:
       options:
@@ -224,9 +225,9 @@ module.exports = (grunt) ->
           src: ['test/**/*.html']
     handlebars:
       options:
-        wrapped: false
+        wrapped: true
         namespace: 'com.github.jackcviers.harder_better_faster_stronger'
-        node: false
+        node: true
         processName: (filename) ->
           filenameRegex = ///(?:.*/)*(.*)(?:\.handlebars$)///
           filenameRegex.exec(filename)[1]
@@ -237,7 +238,7 @@ module.exports = (grunt) ->
               'src/main/handlebars/*.handlebars'
               'src/main/handlebars/**/*.handlebars'
             ]
-          dest: 'templates.js'
+          dest: 'tmp/templates.js'
         ]
     uglify:
       options:

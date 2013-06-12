@@ -5,6 +5,7 @@ var _ = require('underscore');
 var Backbone = require('backbone');
 Backbone.$ = $;
 var File = require('./Backbone.File.Sync').File;
+var fileTarget = require('../../../tmp/templates.js').fileTarget;
 
 var FileTarget = Backbone.View.extend({
   events: {
@@ -17,6 +18,11 @@ var FileTarget = Backbone.View.extend({
     event.stopImmediatePropagation();
     event.preventDefault();
     this.trigger('filetarget:filedropped', originalEvent.dataTransfer.files);
+  },
+  template: fileTarget,
+  render: function() {
+    this.$el.html(this.template());
+    return this;
   }
 });
 

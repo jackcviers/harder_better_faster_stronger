@@ -30,8 +30,8 @@
   },
   "devDependencies": {
     "grunt": "~0.4.1",
-    "grunt-contrib": "~0.6.1",
-    "handlebars": "~1.0.11",
+    "grunt-contrib": "0.6.1",
+    "handlebars": "1.0.10",
     "sinon-chai": "~2.4.0",
     "grunt-bump": "0.0.2",
     "backbone": "~1.0.0",

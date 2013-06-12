@@ -4,3 +4,7 @@ raw
 .DS_Store
 node_modules
 /test/lib/jquery-2.0.2.min.js
+/tmp/templates.js
+/test/main.js
+/test/harder_better_faster_stronger-specs.js
+/test/css/harder_better_faster_stronger.css

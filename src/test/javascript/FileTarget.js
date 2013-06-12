@@ -18,7 +18,7 @@ Backbone = _.extend(Backbone, File);
 var FileTarget = require('../../main/javascript/FileTarget.js');
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
-
+var fileTarget = require('../../../tmp/templates.js').fileTarget;
 
 
 describe('FileTarget', function(){
@@ -96,10 +96,37 @@ describe('FileTarget', function(){
       });
     });
     describe('#render', function(){
-      it('should exist');
-      it('should be a Function');
-      it('should return the view instance ("Be fluent!")');
-      it('should render something into the fixtures div');
+      it('should exist', function(done){
+        expect(this.instance.render).to.exist;
+        done();
+      });
+      it('should be a Function', function(done){
+        this.instance.render.should.be.an.instanceof(Function);
+        done();
+      });
+      it('should return the view instance ("Be fluent!")', function(done){
+        this.instance.render().should.deep.equal(this.instance);
+        done();
+      });
+      it('should render something into the fixtures div', function(done){
+        this.instance.render();
+        $('#fixtures #file-target').html().should.not.equal('');
+        done();
+      });
+    });
+    describe('#template', function(){
+      it('should exist', function(done){
+        expect(this.instance.template).to.exist;
+        done();
+      });
+      it('should be a Function', function(done){
+        this.instance.template.should.be.an.instanceof(Function);
+        done();
+      });
+      it('should be fileTarget', function(done){
+        this.instance.template.should.deep.equal(fileTarget);
+        done();
+      });
     });
   });
 });
