@@ -62,7 +62,16 @@ describe('LocalFiles', function(done){
         this.instance.create.should.be.an.instanceof(Function);
         done();
       });
-      it('should accept an existing model');
+      it('should accept an existing model', function(done){
+        var stub, model;
+        model = new MusicFile();
+        stub = sinon.stub(model, "save");
+        this.instance.create(model);
+        stub.should.have.been.called;
+        stub.restore();
+        this.instance.remove(this.instance.at(0));
+        done();
+      });
       it('should accept a raw File object');
       it('should call sync on the model');
     });
