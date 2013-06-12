@@ -72,8 +72,12 @@ describe('LocalFiles', function(done){
         this.instance.remove(this.instance.at(0));
         done();
       });
-      it('should accept a raw File object');
-      it('should call sync on the model');
+      it('should accept a raw File object', function(done){
+        var stub, model;
+        model = {filename: 'test.mp3', filetype: 'image/png'};
+        this.instance.create(model);
+        done();
+      });
     });
   });
 });
