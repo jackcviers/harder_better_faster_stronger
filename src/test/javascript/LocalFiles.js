@@ -23,6 +23,14 @@ var LocalFiles = require('../../main/javascript/LocalFiles.js');
 
 describe('LocalFiles', function(done){
   testInBrowserOnly(this)(function(){
+    beforeEach(function(done){
+      this.instance = new LocalFiles();
+      done();
+    });
+    afterEach(function(done){
+      this.instance = {};
+      done();
+    });
     it('should exist', function(done){
       expect(LocalFiles).to.exist;
       done();
@@ -31,6 +39,9 @@ describe('LocalFiles', function(done){
       LocalFiles.should.be.an.instanceof(Function);
       done();
     });
-    it('should be a Backbone.Collection');
+    it('should be a Backbone.Collection', function(done){
+      this.instance.should.be.an.instanceof(Backbone.Collection);
+      done();
+    });
   });
 });
