@@ -155,6 +155,15 @@ module.exports = (grunt) ->
           {
             src:
               [
+                'jquery-2.0.2.min.js'
+              ]
+            dest: 'test/lib'
+            expand: true
+            cwd: 'lib'
+          }
+          {
+            src:
+              [
                 '**'
               ]
             dest: 'test/fonts'
