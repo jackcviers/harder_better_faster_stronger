@@ -3,3 +3,4 @@ raw
 *~
 .DS_Store
 node_modules
+/test/lib/jquery-2.0.2.min.js
