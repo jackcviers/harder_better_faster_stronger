@@ -44,6 +44,19 @@ describe('Player', function(){
       this.instance.should.be.an.instanceof(Backbone.View);
       done();
     });
+    describe('#controls', function(){
+      beforeEach(function(done){
+        this.instance.render();
+        done();
+      });
+      afterEach(function(done){
+        this.instance.fileTarget.remove();
+        this.instance.visualization.remove();
+        this.instance.controls.remove();
+      });
+      it('should exist');
+      it('should be a Controls instance');
+    });
     describe('#delegateEvents', function(){
       it('should exist', function(done){
         expect(this.instance.delegateEvents).to.exist;
