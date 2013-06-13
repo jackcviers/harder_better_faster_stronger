@@ -58,5 +58,10 @@ describe('AudioSource', function(){
         done();
       });
     });
+    describe('#audioContext', function(){
+      it('should exist');
+      it('should be a Function');
+      it('should be an AudioContext or a webkitAudioContext');
+    });
   });
 });
