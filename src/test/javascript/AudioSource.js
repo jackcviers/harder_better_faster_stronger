@@ -59,7 +59,18 @@ describe('AudioSource', function(){
       });
     });
     describe('#audioContext', function(){
-      it('should exist');
+      beforeEach(function(done){
+        this.instance.render();
+        done();
+      });
+      afterEach(function(done){
+        this.instance.remove();
+        done();
+      });
+      it('should exist', function(done){
+        expect(this.instance.audioContext).to.exist;
+        done();
+      });
       it('should be a Function');
       it('should be an AudioContext or a webkitAudioContext');
     });
