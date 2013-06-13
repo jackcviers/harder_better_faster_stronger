@@ -130,6 +130,15 @@ module.exports = (grunt) ->
               [
                 '**'
               ]
+            dest: 'css/'
+            cwd: 'src/main/resources/css'
+            expand: true
+          }
+          {
+            src:
+              [
+                '**'
+              ]
             dest: 'images/'
             cwd: 'src/main/resources/images'
             expand: true

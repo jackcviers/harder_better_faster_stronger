@@ -17,11 +17,12 @@ var File = require('../../main/javascript/Backbone.File.Sync.js').File;
 Backbone = _.extend(Backbone, File);
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
-var AudioSource = require('../../main/javascript/AudioSource.js');
-var AudioContext = global.AudioContext || global.webkitAudioContext;
 
 describe('AudioSource', function(){
   testInBrowserOnly(this)(function(){
+    var AudioSource = require('../../main/javascript/AudioSource.js');
+    var AudioContext = global.AudioContext || global.webkitAudioContext;
+
     beforeEach(function(done){
       $('#fixtures').html('<div id="audio-source-container"></div>');
       this.instance = new AudioSource({el: $('#fixtures #audio-source-container')});
