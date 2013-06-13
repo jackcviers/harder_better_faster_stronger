@@ -17,6 +17,7 @@ var File = require('../../main/javascript/Backbone.File.Sync.js').File;
 Backbone = _.extend(Backbone, File);
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
+var AudioSource = require('../../main/javascript/AudioSource.js');
 
 describe('AudioSource', function(){
   it('should exist', function(done){
