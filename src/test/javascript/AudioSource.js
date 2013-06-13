@@ -19,6 +19,9 @@ var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
 
 describe('AudioSource', function(){
-  it('should exist');
+  it('should exist', function(done){
+    expect(AudioSource).to.exist;
+    done();
+  });
   it('should be a Backbone.View');
 });
