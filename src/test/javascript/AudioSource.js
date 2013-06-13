@@ -57,6 +57,6 @@ describe('AudioSource', function(){
         $('#fixtures #audio-source-container').html().should.not.equal('');
         done();
       });
-    }); 
+    });
   });
 });
