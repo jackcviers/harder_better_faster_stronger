@@ -21,6 +21,7 @@ var fileTarget = require('../../../tmp/templates.js').fileTarget;
 var player = require('../../../tmp/templates.js').player;
 var Player = require('../../main/javascript/Player.js');
 var FileTarget = require('../../main/javascript/FileTarget.js');
+var Visualization = require('../../main/javascript/Visualization.js');
 
 describe('Player', function(){
   testInBrowserOnly(this)(function(){
@@ -109,7 +110,8 @@ describe('Player', function(){
         done();
       });
       afterEach(function(done){
-        this.instance.$el.html('');
+        this.instance.fileTarget.remove();
+        this.instance.visualization.remove();
         done();
       });
       it('should exist', function(done){
@@ -155,8 +157,23 @@ describe('Player', function(){
       });
     });
     describe('#visualization', function(){
-      it('should exist');
-      it('should be a Visualization view');
+      beforeEach(function(done){
+        this.instance.render();
+        done();
+      });
+      afterEach(function(done){
+        this.instance.visualization.remove();
+        this.instance.fileTarget.remove();
+        done();
+      });
+      it('should exist', function(done){
+        expect(this.instance.visualization).to.exist;
+        done();
+      });
+      it('should be a Visualization view', function(done){
+        this.instance.visualization.should.be.an.instanceof(Visualization);
+        done();
+      });
     });
   });
 });

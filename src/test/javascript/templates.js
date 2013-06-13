@@ -90,9 +90,7 @@ describe('templates', function(){
       done();
     });
     it('should output the expected html', function(done){
-      var expectedHtml = '<div class="visualiztion-container row-fluid">\n' +
-        '  <canvas class="visualization-context span12"></canvas>\n' +
-        '</div>';
+      var expectedHtml = '<canvas class="visualization-context span12"></canvas>';
       visualization().should.equal(expectedHtml);
       done();
     });

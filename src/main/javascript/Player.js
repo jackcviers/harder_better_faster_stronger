@@ -8,6 +8,7 @@ var File = require('./Backbone.File.Sync').File;
 var templates = require('../../../tmp/templates.js');
 var fileTarget = templates.fileTarget;
 var FileTarget = require('./FileTarget');
+var Visualization = require('./Visualization');
 var player = templates.player;
 
 var Player = Backbone.View.extend({
@@ -27,11 +28,16 @@ var Player = Backbone.View.extend({
     if(this.fileTarget){
       this.fileTarget.remove();
     }
+    if(this.visualization){
+      this.visualization.remove();
+    }
     this.$el.html(this.template());
     this.fileTarget = new FileTarget({el: this.$('.file-target-container', this.$el)}).render();
+    this.visualization = new Visualization({el: this.$('.visualization-container', this.$el)}).render();
     this.delegateEvents(this.events);
     return this;
-  }
+  },
+  visualization: null
 });
 
 module.exports = Player;
