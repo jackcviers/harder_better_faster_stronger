@@ -10,9 +10,11 @@ var templates = require('../../../tmp/templates.js');
 var fileTarget = templates.fileTarget;
 var FileTarget = require('./FileTarget');
 var Visualization = require('./Visualization');
+var Controls = require('./Controls');
 var player = templates.player;
 
 var Player = Backbone.View.extend({
+  controls: null,
   delegateEvents: function(){
     if(this.fileTarget){
       this.listenTo(this.fileTarget, 'filetarget:filedropped', this.fileDropped);
@@ -32,9 +34,13 @@ var Player = Backbone.View.extend({
     if(this.visualization){
       this.visualization.remove();
     }
+    if(this.controls){
+      this.controls.remove();
+    }
     this.$el.html(this.template());
     this.fileTarget = new FileTarget({el: this.$('.file-target-container', this.$el)}).render();
     this.visualization = new Visualization({el: this.$('.visualization-container', this.$el)}).render();
+    this.controls = new Controls({el: this.$('.controls-container', this.$el)}).render();
     this.delegateEvents(this.events);
     return this;
   },

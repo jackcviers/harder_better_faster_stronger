@@ -22,6 +22,7 @@ var player = require('../../../tmp/templates.js').player;
 var Player = require('../../main/javascript/Player.js');
 var FileTarget = require('../../main/javascript/FileTarget.js');
 var Visualization = require('../../main/javascript/Visualization.js');
+var Controls = require('../../main/javascript/Controls.js');
 
 describe('Player', function(){
   testInBrowserOnly(this)(function(){
@@ -53,9 +54,16 @@ describe('Player', function(){
         this.instance.fileTarget.remove();
         this.instance.visualization.remove();
         this.instance.controls.remove();
+        done();
       });
-      it('should exist');
-      it('should be a Controls instance');
+      it('should exist', function(done){
+        expect(this.instance.controls).to.exist;
+        done();
+      });
+      it('should be a Controls instance', function(done){
+        this.instance.controls.should.be.an.instanceof(Controls);
+        done();
+      });
     });
     describe('#delegateEvents', function(){
       it('should exist', function(done){
