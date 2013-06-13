@@ -40,6 +40,24 @@ describe('AudioSource', function(){
       this.instance.should.be.an.instanceof(Backbone.View);
       done();
     });
+    describe('#audioContext', function(){
+      beforeEach(function(done){
+        this.instance.render();
+        done();
+      });
+      afterEach(function(done){
+        this.instance.remove();
+        done();
+      });
+      it('should exist', function(done){
+        expect(this.instance.audioContext).to.exist;
+        done();
+      });
+      it('should be an AudioContext or a webkitAudioContext', function(done){
+        this.instance.audioContext.should.be.an.instanceof(AudioContext);
+        done();
+      });
+    });
     describe('#render', function(){
       it('should exist', function(done){
         expect(this.instance.render).to.exist;
@@ -59,7 +77,7 @@ describe('AudioSource', function(){
         done();
       });
     });
-    describe('#audioContext', function(){
+    describe('#source', function(){
       beforeEach(function(done){
         this.instance.render();
         done();
@@ -69,11 +87,7 @@ describe('AudioSource', function(){
         done();
       });
       it('should exist', function(done){
-        expect(this.instance.audioContext).to.exist;
-        done();
-      });
-      it('should be an AudioContext or a webkitAudioContext', function(done){
-        this.instance.audioContext.should.be.an.instanceof(AudioContext);
+        expect(this.instance.source).to.exist;
         done();
       });
     });
