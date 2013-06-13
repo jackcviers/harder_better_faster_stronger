@@ -1,3 +1,4 @@
+var global = (typeof window !== 'undefined' && window != null) ? window : global;
 var jQuery = global.jQuery;
 jQuery = jQuery || require('jquery-browserify');
 var $ = jQuery;

@@ -21,8 +21,37 @@ var templates = require('../../../tmp/templates.js');
 var fileTarget = templates.fileTarget;
 var player = templates.player;
 var visualization = templates.visualization;
+var controls = templates.controls;
 
 describe('templates', function(){
+  describe('.controls()', function(){
+    beforeEach(function(done){
+      $('#fixtures').html('');
+      done();
+    });
+    afterEach(function(done){
+      $('#fixtures').html('');
+      done();
+    });
+    it('should exist', function(done){
+      expect(controls).to.exist;
+      done();
+    });
+    it('should be a function', function(done){
+      controls.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should output the expected html', function(done){
+      var expectedHtml = '<a href="#play" class="btn btn-small btn-primary offset4 span1" title="Play">\n' +
+        '  <span class="fui-play"></span>\n' +
+        '</a>\n' +
+        '<a href="#stop" class="btn btn-small btn-primary span1" title="Stop">\n' +
+        '  <span class="fui-checkbox-unchecked"></span>\n' +
+        '</a>';
+      controls().should.equal(expectedHtml);
+      done();
+    });
+  });
   describe('.fileTarget()', function(){
     beforeEach(function(done){
       $('#fixtures').html('');
