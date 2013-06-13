@@ -141,6 +141,20 @@ module.exports = (grunt) ->
             cwd: 'src/main/resources/fonts'
             expand: true            
           }
+          {
+            src:
+              ['demo.html']
+            dest: 'test/'
+            cwd: 'lib'
+            expand: true
+          }
+          {
+            src:
+              ['harder_better_faster_stronger.js']
+            dest: 'test/js'
+            cwd: '.'
+            expand: true
+          }
         ]
       test:
         files:[
@@ -217,12 +231,12 @@ module.exports = (grunt) ->
         options:
           reporter: 'Spec'
         files:
-          src: ['test/**/*.html']
+          src: ['test/test.html']
       watch:
         options:
           reporter: 'Min'
         files:
-          src: ['test/**/*.html']
+          src: ['test/test.html']
     handlebars:
       options:
         wrapped: true

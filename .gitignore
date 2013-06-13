@@ -8,3 +8,4 @@ node_modules
 /test/main.js
 /test/harder_better_faster_stronger-specs.js
 /test/css/harder_better_faster_stronger.css
+/test/demo.html
