@@ -17,8 +17,10 @@ Backbone.$ = $
 var File = require('../../main/javascript/Backbone.File.Sync.js').File;
 Backbone = _.extend(Backbone, File);
 var when = require('when');
-var fileTarget = require('../../../tmp/templates.js').fileTarget;
-var player = require('../../../tmp/templates.js').player;
+var templates = require('../../../tmp/templates.js');
+var fileTarget = templates.fileTarget;
+var player = templates.player;
+var visualization = templates.visualization;
 
 describe('templates', function(){
   describe('.fileTarget()', function(){
@@ -75,6 +77,23 @@ describe('templates', function(){
         '  </div>\n' + 
         '</div>';
       player().should.equal(expectedHtml);
+      done();
+    });
+  });
+  describe('.visualization()', function(){
+    it('should exist', function(done){
+      expect(visualization).to.exist;
+      done();
+    });
+    it('should be a function', function(done){
+      visualization.should.be.an.instanceof(Function);
+      done();
+    });
+    it('should output the expected html', function(done){
+      var expectedHtml = '<div class="visualiztion-container row-fluid">\n' +
+        '  <canvas class="visualization-context span12"></canvas>\n' +
+        '</div>';
+      visualization().should.equal(expectedHtml);
       done();
     });
   });
