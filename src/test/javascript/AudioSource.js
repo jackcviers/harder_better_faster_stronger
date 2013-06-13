@@ -39,5 +39,24 @@ describe('AudioSource', function(){
       this.instance.should.be.an.instanceof(Backbone.View);
       done();
     });
+    describe('#render', function(){
+      it('should exist', function(done){
+        expect(this.instance.render).to.exist;
+        done();
+      });
+      it('should be a Function', function(done){
+        this.instance.render.should.be.an.instanceof(Function);
+        done();
+      });
+      it('should return the view instance ("Be fluent!")', function(done){
+        this.instance.render().should.deep.equal(this.instance);
+        done();
+      });
+      it('should render something into the fixtures div', function(done){
+        this.instance.render();
+        $('#fixtures #audio-source-container').html().should.not.equal('');
+        done();
+      });
+    }); 
   });
 });
