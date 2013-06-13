@@ -20,22 +20,24 @@ var testInBrowserOnly = require('./testInBrowserOnly.js');
 var AudioSource = require('../../main/javascript/AudioSource.js');
 
 describe('AudioSource', function(){
-  beforeEach(function(done){
-    $('#fixtures').html('<div id="audio-source-container"></div>');
-    this.instance = new AudioSource({el: $('#fixtures #audio-source-container')});
-    done();
-  });
-  afterEach(function(done){
-    this.instance.remove();
-    $('#fixtures').html('');
-    done();
-  });
-  it('should exist', function(done){
-    expect(AudioSource).to.exist;
-    done();
-  });
-  it('should be a Backbone.View', function(done){
-    this.instance.should.be.an.instanceof(Backbone.View);
-    done();
+  testInBrowserOnly(this)(function(){
+    beforeEach(function(done){
+      $('#fixtures').html('<div id="audio-source-container"></div>');
+      this.instance = new AudioSource({el: $('#fixtures #audio-source-container')});
+      done();
+    });
+    afterEach(function(done){
+      this.instance.remove();
+      $('#fixtures').html('');
+      done();
+    });
+    it('should exist', function(done){
+      expect(AudioSource).to.exist;
+      done();
+    });
+    it('should be a Backbone.View', function(done){
+      this.instance.should.be.an.instanceof(Backbone.View);
+      done();
+    });
   });
 });
