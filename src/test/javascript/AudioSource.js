@@ -40,6 +40,20 @@ describe('AudioSource', function(){
       this.instance.should.be.an.instanceof(Backbone.View);
       done();
     });
+    describe('#analyzer', function(){
+     beforeEach(function(done){
+        this.instance.render();
+        done();
+      });
+      afterEach(function(done){
+        this.instance.remove();
+        done();
+      });
+      it('should exist', function(done){
+        expect(this.instance.analyzer).to.exist;
+        done();
+      });
+    });
     describe('#audioContext', function(){
       beforeEach(function(done){
         this.instance.render();
