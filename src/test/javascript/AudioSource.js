@@ -21,11 +21,13 @@ var AudioSource = require('../../main/javascript/AudioSource.js');
 
 describe('AudioSource', function(){
   beforeEach(function(done){
-    this.instance = {};
+    $('#fixtures').html('<div id="audio-source-container"></div>');
+    this.instance = new AudioSource({el: $('#fixtures #audio-source-container')});
     done();
   });
   afterEach(function(done){
-    this.instance = {};
+    this.instance.remove();
+    $('#fixtures').html('');
     done();
   });
   it('should exist', function(done){

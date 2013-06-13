@@ -6,6 +6,6 @@ var Backbone = require('backbone');
 Backbone.$ = $;
 var File = require('./Backbone.File.Sync').File;
 
-var AudioSource = {};
+var AudioSource = Backbone.View.extend({});
 
 module.exports = AudioSource;
