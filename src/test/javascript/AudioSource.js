@@ -18,3 +18,7 @@ Backbone = _.extend(Backbone, File);
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
 
+describe('AudioSource', function(){
+  it('should exist');
+  it('should be a Backbone.View');
+});
