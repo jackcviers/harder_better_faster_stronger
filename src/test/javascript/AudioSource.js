@@ -18,6 +18,7 @@ Backbone = _.extend(Backbone, File);
 var when = require('when');
 var testInBrowserOnly = require('./testInBrowserOnly.js');
 var AudioSource = require('../../main/javascript/AudioSource.js');
+var AudioContext = global.AudioContext || global.webkitAudioContext;
 
 describe('AudioSource', function(){
   testInBrowserOnly(this)(function(){
@@ -71,8 +72,10 @@ describe('AudioSource', function(){
         expect(this.instance.audioContext).to.exist;
         done();
       });
-      it('should be a Function');
-      it('should be an AudioContext or a webkitAudioContext');
+      it('should be an AudioContext or a webkitAudioContext', function(done){
+        this.instance.audioContext.should.be.an.instanceof(AudioContext);
+        done();
+      });
     });
   });
 });
