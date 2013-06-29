@@ -8,6 +8,9 @@ var File = require('./Backbone.File.Sync').File;
 var MusicFile = require('./MusicFile');
 
 var LocalFiles = Backbone.Collection.extend({
+  url: function(){
+    return 'filesystem:';
+  },
   model: MusicFile
 });
 
